@@ -16,6 +16,7 @@ This is a Next.js 15 subtitle translation application that uses AI to translate 
 ## Architecture
 
 ### Tech Stack
+
 - **Framework**: Next.js 15 with App Router and Server-Sent Events for streaming
 - **Language**: TypeScript with strict mode
 - **Styling**: Tailwind CSS v4 with CSS variables and dark mode support
@@ -24,7 +25,16 @@ This is a Next.js 15 subtitle translation application that uses AI to translate 
 - **Language Detection**: franc for automatic language detection with 186+ language support
 - **Subtitle Processing**: subsrt for parsing and generating multiple subtitle formats
 
+shadcn/ui is used for the UI components. The installation method for the components is as follows.
+
+```bash
+pnpm dlx shadcn@latest add component-name
+```
+
+example: `pnpm dlx shadcn@latest add button`
+
 ### Project Structure
+
 ```
 src/
 ├── app/
@@ -52,42 +62,49 @@ src/
 ### Key Features
 
 #### Subtitle Processing
+
 - **Multi-format Support**: SRT, VTT, ASS, SSA subtitle formats
 - **Automatic Detection**: Uses franc to detect source language with confidence scoring
 - **Text Extraction**: Parses subtitle files and extracts text while preserving timing information
 - **Format Validation**: Validates subtitle file structure before processing
 
 #### AI Translation System
+
 - **Multi-provider Support**: OpenAI, Anthropic, Google AI with unified interface via Vercel AI SDK
 - **Concurrent Processing**: Configurable concurrency (1-10 simultaneous translations) with retry logic
 - **Progress Tracking**: Real-time progress updates via Server-Sent Events
 - **Error Handling**: Automatic retry with exponential backoff for failed translations
 
 #### Configuration Management
+
 - **Provider Setup**: API key management for multiple AI providers
 - **Model Selection**: Dynamic model selection per provider
 - **Settings Persistence**: localStorage-based configuration with browser sync
 - **Connection Testing**: Built-in API connection testing for each provider
 
 #### Export Options
+
 - **Dual Language Output**: Original text on top/bottom or translation on top/bottom
 - **Multiple Formats**: Export to SRT, VTT, or ASS with preserved timing
 - **Custom Naming**: User-configurable output filenames
 - **Preview**: Live preview of final subtitle format before export
 
 ### API Routes
+
 - **POST /api/upload**: Handles file upload, parsing, and language detection
-- **POST /api/translate**: Streaming translation endpoint with progress updates  
+- **POST /api/translate**: Streaming translation endpoint with progress updates
 - **GET /api/translate**: Connection testing for AI providers
 - **POST /api/export**: Generates and downloads translated subtitle files
 
 ### Configuration
+
 - **AI Providers**: Configured in `src/config/translation-config.json`
 - **Default Settings**: 3 concurrent translations, original-on-top layout, 2 max retries
 - **Path Aliases**: `@/components`, `@/lib`, `@/types`, `@/config`
 - **Environment**: Supports API keys via configuration panel (no .env file needed)
 
 ### Development Notes
+
 - **Language Support**: Uses ISO 639-3 language codes with langs package for human-readable names
 - **Streaming**: Server-Sent Events for real-time progress updates during translation
 - **Error Handling**: Comprehensive error handling with user-friendly messages

@@ -1,9 +1,11 @@
 // Translation configuration and types
 export interface AIProvider {
+  id?: string;
   name: string;
   apiKey: string;
   baseURL?: string;
   models: string[];
+  isCustom?: boolean;
 }
 
 export interface TranslationConfig {
@@ -52,10 +54,22 @@ export interface LanguageOption {
 }
 
 export interface SubtitleFile {
+  id: string;
   name: string;
   content: string;
   format: string;
   entries: SubtitleEntry[];
+  textEntries: string[];
+  detectedLanguage?: {
+    code: string;
+    name: string;
+    confidence: number;
+  };
+  sourceLanguage?: string;
+  targetLanguage?: string;
+  translatedEntries?: SubtitleEntry[];
+  progress?: TranslationProgress;
+  isTranslating?: boolean;
 }
 
 export type OutputFormat = 'srt' | 'vtt' | 'ass';

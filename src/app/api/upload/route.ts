@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SubtitleParser } from '@/lib/subtitle-parser';
-import { LanguageDetector } from '@/lib/language-detector';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,13 +50,8 @@ export async function POST(request: NextRequest) {
     // Get statistics
     const statistics = SubtitleParser.getStatistics(parsedSubtitle.entries);
 
-    // Extract text for language detection
+    // Extract text for translation
     const textEntries = SubtitleParser.extractTextForTranslation(parsedSubtitle.entries);
-    
-    // Detect language
-    const detectedLanguage = LanguageDetector.detectLanguageFromEntries(textEntries);
-    const detectedLanguageName = detectedLanguage ? LanguageDetector.getLanguageName(detectedLanguage) : null;
-    const confidence = detectedLanguage ? LanguageDetector.getDetectionConfidence(textEntries.join(' ')) : 0;
 
     // Prepare response
     const response = {
@@ -67,11 +61,6 @@ export async function POST(request: NextRequest) {
         entries: parsedSubtitle.entries
       },
       statistics,
-      detectedLanguage: detectedLanguage ? {
-        code: detectedLanguage,
-        name: detectedLanguageName,
-        confidence
-      } : null,
       textEntries // For translation
     };
 

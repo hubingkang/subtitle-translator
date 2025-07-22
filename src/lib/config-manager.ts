@@ -40,6 +40,55 @@ class ConfigManager {
     this.saveConfig();
   }
 
+  public addCustomProvider(provider: TranslationConfig['providers'][string]): string {
+    const providerId = provider.id || provider.name.toLowerCase().replace(/\s+/g, '-');
+    this.config.providers[providerId] = {
+      ...provider,
+      id: providerId,
+      isCustom: true
+    };
+    this.saveConfig();
+    return providerId;
+  }
+
+  public removeProvider(providerId: string): boolean {
+    const provider = this.config.providers[providerId];
+    if (!provider || !provider.isCustom) {
+      return false; // Can't remove built-in providers
+    }
+    
+    delete this.config.providers[providerId];
+    
+    // Update default provider if it was the removed one
+    if (this.config.defaultProvider === providerId) {
+      const availableProviders = Object.keys(this.config.providers);
+      this.config.defaultProvider = availableProviders[0] || 'openai';
+    }
+    
+    this.saveConfig();
+    return true;
+  }
+
+  public getBuiltInProviders(): Record<string, TranslationConfig['providers'][string]> {
+    const builtInProviders: Record<string, TranslationConfig['providers'][string]> = {};
+    for (const [id, provider] of Object.entries(this.config.providers)) {
+      if (!provider.isCustom) {
+        builtInProviders[id] = provider;
+      }
+    }
+    return builtInProviders;
+  }
+
+  public getCustomProviders(): Record<string, TranslationConfig['providers'][string]> {
+    const customProviders: Record<string, TranslationConfig['providers'][string]> = {};
+    for (const [id, provider] of Object.entries(this.config.providers)) {
+      if (provider.isCustom) {
+        customProviders[id] = provider;
+      }
+    }
+    return customProviders;
+  }
+
   private saveConfig(): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('translation-config', JSON.stringify(this.config));
@@ -76,8 +125,8 @@ class ConfigManager {
       errors.push('Default provider is not configured with API key');
     }
     
-    if (this.config.concurrency < 1 || this.config.concurrency > 10) {
-      errors.push('Concurrency must be between 1 and 10');
+    if (this.config.concurrency < 1 || this.config.concurrency > 100) {
+      errors.push('Concurrency must be between 1 and 100');
     }
 
     return {

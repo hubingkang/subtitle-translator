@@ -1,15 +1,18 @@
 {
   "providers": {
+    "siliconflow": {
+      "name": "硅基流动",
+      "apiKey": "",
+      "baseURL": "https://api.siliconflow.cn/v1",
+      "models": ["Pro/deepseek-ai/DeepSeek-V3"],
+      "defaultModel": "Pro/deepseek-ai/DeepSeek-V3"
+    },
     "openai": {
       "name": "OpenAI",
       "apiKey": "",
       "baseURL": "https://api.openai.com/v1",
-      "models": [
-        "gpt-4o",
-        "gpt-4o-mini",
-        "gpt-4-turbo",
-        "gpt-3.5-turbo"
-      ]
+      "models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+      "defaultModel": "gpt-4o"
     },
     "anthropic": {
       "name": "Anthropic",
@@ -19,22 +22,21 @@
         "claude-3-5-sonnet-20241022",
         "claude-3-haiku-20240307",
         "claude-3-sonnet-20240229"
-      ]
+      ],
+      "defaultModel": "claude-3-5-sonnet-20241022"
     },
     "google": {
       "name": "Google AI",
       "apiKey": "",
       "baseURL": "https://generativelanguage.googleapis.com/v1beta",
-      "models": [
-        "gemini-1.5-pro",
-        "gemini-1.5-flash",
-        "gemini-pro"
-      ]
+      "models": ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
+      "defaultModel": "gemini-1.5-pro"
     }
   },
-  "defaultProvider": "openai",
-  "defaultModel": "gpt-4o-mini",
+  "defaultProvider": "siliconflow",
+  "defaultModel": "Pro/deepseek-ai/DeepSeek-V3",
   "concurrency": 3,
   "outputFormat": "original-top",
-  "maxRetries": 2
+  "maxRetries": 2,
+  "subtitleBatchSize": 5
 }

@@ -5,6 +5,8 @@ export interface AIProvider {
   apiKey: string;
   baseURL?: string;
   models: string[];
+  defaultModel?: string;
+  selectedModel?: string;
   isCustom?: boolean;
 }
 
@@ -15,6 +17,7 @@ export interface TranslationConfig {
   concurrency: number;
   outputFormat: 'original-top' | 'translation-top';
   maxRetries: number;
+  subtitleBatchSize: number;
 }
 
 export interface SubtitleEntry {
@@ -60,11 +63,6 @@ export interface SubtitleFile {
   format: string;
   entries: SubtitleEntry[];
   textEntries: string[];
-  detectedLanguage?: {
-    code: string;
-    name: string;
-    confidence: number;
-  };
   sourceLanguage?: string;
   targetLanguage?: string;
   translatedEntries?: SubtitleEntry[];

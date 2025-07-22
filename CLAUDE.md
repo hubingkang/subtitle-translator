@@ -2,16 +2,67 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+<workflow>
+1. 每当我输入新的需求的时候，为了规范需求质量和验收标准，你首先会搞清楚问题和需求
+2. 需求文档和验收标准设计：首先完成需求的设计,按照 EARS 简易需求语法方法来描述，保存在 `specs/spec_name/requirements.md` 中，跟我进行确认，最终确认清楚后，需求定稿，参考格式如下
 
-This is a Next.js 15 subtitle translation application that uses AI to translate subtitle files (SRT, VTT, ASS) between languages. The app features automatic language detection using franc, supports multiple AI providers (OpenAI, Anthropic, Google), and provides real-time translation progress tracking with concurrent processing.
+```markdown
+# 需求文档
+
+## 介绍
+
+需求描述
+
+## 需求
+
+### 需求 1 - 需求名称
+
+**用户故事：** 用户故事内容
+
+#### 验收标准
+
+1. 采用 ERAS 描述的子句 While <可选前置条件>, when <可选触发器>, the <系统名称> shall <系统响应>，例如 When 选择"静音"时，笔记本电脑应当抑制所有音频输出。
+2. ...
+   ...
+```
+
+2. 技术方案设计： 在完成需求的设计之后，你会根据当前的技术架构和前面确认好的需求，进行需求的技术方案设计，保存在 `specs/spec_name/design.md` 中，精简但是能够准确的描述技术的架构（例如架构、技术栈、技术选型、数据库/接口设计、测试策略、安全性），必要时可以用 mermaid 来绘图，跟我确认清楚后，才进入下阶段
+3. 任务拆分：在完成技术方案设计后，你会根据需求文档和技术方案，细化具体要做的事情，保存在`specs/spec_name/tasks.md` 中, 跟我确认清楚后，才开始正式执行任务，同时更新任务的状态
+
+格式如下
+
+```markdown
+# 实施计划
+
+- [ ] 1. 任务信息
+- 具体要做的事情
+- ...
+- \_需求: 相关的需求点的编号
+```
+
+当完成某项任务时，根据任务的编号，在 `specs/spec_name/tasks.md` 中更新任务的状态，并更新任务的进度，同时更新任务的完成时间
+
+```markdown
+# 实施计划
+
+- [x] 1. 任务信息
+- ...
+```
+
+</workflow>
+
+## 项目概览
+
+这是一个 Next.js 15 字幕翻译应用程序，使用 AI 在语言之间翻译字幕文件（SRT、VTT、ASS）。支持多个 AI 提供商（OpenAI、Anthropic、Google），并提供实时翻译进度跟踪和并发处理。
 
 ## Development Commands
 
-- `npm run dev` - Start development server with Turbopack (runs on http://localhost:3000)
-- `npm run build` - Build production application
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint for code linting
+- `pnpm dev` - Start development server with Turbopack (runs on http://localhost:3000)
+- `pnpm build` - Build production application
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint for code linting
+
+Please use `pnpm` instead of `npm` to install dependencies.
 
 ## Architecture
 
@@ -22,7 +73,7 @@ This is a Next.js 15 subtitle translation application that uses AI to translate 
 - **Styling**: Tailwind CSS v4 with CSS variables and dark mode support
 - **UI Components**: shadcn/ui (New York style variant) with Radix UI primitives
 - **AI Integration**: Vercel AI SDK with support for OpenAI, Anthropic, and Google AI
-- **Language Detection**: franc for automatic language detection with 186+ language support
+- **Language Selection**: Manual language selection with comprehensive language support
 - **Subtitle Processing**: subsrt for parsing and generating multiple subtitle formats
 
 shadcn/ui is used for the UI components. The installation method for the components is as follows.
@@ -50,7 +101,7 @@ src/
 │   └── output/        # Export and download functionality
 ├── lib/
 │   ├── config-manager.ts    # AI provider configuration management
-│   ├── language-detector.ts # franc integration for language detection
+│   ├── language-selector.ts # Language selection utilities
 │   ├── subtitle-parser.ts   # subsrt wrapper for subtitle processing
 │   └── translator.ts        # AI translation with concurrency control
 ├── types/
@@ -64,7 +115,7 @@ src/
 #### Subtitle Processing
 
 - **Multi-format Support**: SRT, VTT, ASS, SSA subtitle formats
-- **Automatic Detection**: Uses franc to detect source language with confidence scoring
+- **Manual Selection**: Users manually select source and target languages from comprehensive language list
 - **Text Extraction**: Parses subtitle files and extracts text while preserving timing information
 - **Format Validation**: Validates subtitle file structure before processing
 

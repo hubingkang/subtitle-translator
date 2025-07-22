@@ -7,7 +7,7 @@ interface ParsedSubtitle {
   text: string;
 }
 
-export class SubtitleParser {
+export class SubtitleParserClient {
   /**
    * Parse subtitle file content and return structured data
    */
@@ -175,5 +175,85 @@ export class SubtitleParser {
       averageLength: Math.round(totalTextLength / entries.length),
       longestEntry
     };
+  }
+
+  /**
+   * Process file upload client-side
+   */
+  public static async processFile(file: File): Promise<{
+    subtitle: Omit<SubtitleFile, 'id' | 'textEntries'>;
+    statistics: ReturnType<typeof SubtitleParserClient.getStatistics>;
+    textEntries: string[];
+  }> {
+    // Validate file type
+    const allowedExtensions = ['.srt', '.vtt', '.ass', '.ssa'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+      throw new Error(`Unsupported file type. Allowed types: ${allowedExtensions.join(', ')}`);
+    }
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('File size too large. Maximum size is 10MB.');
+    }
+
+    // Read file content
+    const content = await file.text();
+
+    // Validate subtitle content
+    const validation = this.validateSubtitleContent(content);
+    if (!validation.isValid) {
+      throw new Error(`Invalid subtitle file: ${validation.error}`);
+    }
+
+    // Parse subtitle file
+    const parsedSubtitle = this.parseSubtitle(content, file.name);
+    
+    // Get statistics
+    const statistics = this.getStatistics(parsedSubtitle.entries);
+
+    // Extract text for translation
+    const textEntries = this.extractTextForTranslation(parsedSubtitle.entries);
+
+    return {
+      subtitle: parsedSubtitle,
+      statistics,
+      textEntries
+    };
+  }
+
+  /**
+   * Generate and download file client-side
+   */
+  public static downloadFile(
+    entries: SubtitleEntry[],
+    format: OutputFormat = 'srt',
+    layout: 'original-top' | 'translation-top' = 'original-top',
+    filename: string = 'translated-subtitles'
+  ): void {
+    try {
+      // Generate output content
+      const outputContent = this.generateOutput(entries, format, layout);
+      
+      // Determine file extension and MIME type
+      const extension = format === 'vtt' ? 'vtt' : format === 'ass' ? 'ass' : 'srt';
+      const mimeType = format === 'vtt' ? 'text/vtt' : 'text/plain';
+      const finalFilename = `${filename}.${extension}`;
+
+      // Create blob and download
+      const blob = new Blob([outputContent], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = finalFilename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      throw new Error(`Failed to generate ${format} file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }

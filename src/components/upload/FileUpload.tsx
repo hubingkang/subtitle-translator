@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { Upload, FileText, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 

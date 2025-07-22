@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { LanguageOption } from '@/types/translation';
-import { LanguageDetector } from '@/lib/language-detector';
+import langs from 'langs';
+
+// Type definition for langs library
+interface LangItem {
+  '1': string;
+  '2B': string;
+  '2T': string;
+  '3': string;
+  name: string;
+  local: string;
+}
 
 interface LanguageSelectorProps {
   value: string;
@@ -30,22 +40,103 @@ export function LanguageSelector({
   const [languages, setLanguages] = useState<LanguageOption[]>([]);
   const [filteredLanguages, setFilteredLanguages] = useState<LanguageOption[]>([]);
 
+  // Helper functions
+  const getPopularLanguages = useCallback((): LanguageOption[] => {
+    const popularCodes = [
+      'eng', // English
+      'spa', // Spanish
+      'fra', // French
+      'deu', // German
+      'ita', // Italian
+      'por', // Portuguese
+      'rus', // Russian
+      'jpn', // Japanese
+      'kor', // Korean
+      'cmn', // Chinese (Mandarin)
+      'ara', // Arabic
+      'hin', // Hindi
+      'tha', // Thai
+      'vie', // Vietnamese
+      'nld', // Dutch
+      'pol', // Polish
+      'tur', // Turkish
+      'swe', // Swedish
+      'nor', // Norwegian
+      'dan', // Danish
+      'fin', // Finnish
+      'heb', // Hebrew
+      'ces', // Czech
+      'hun', // Hungarian
+      'ron', // Romanian
+      'bul', // Bulgarian
+      'hrv', // Croatian
+      'slv', // Slovenian
+      'est', // Estonian
+      'lav', // Latvian
+      'lit', // Lithuanian
+      'ell', // Greek
+      'ukr', // Ukrainian
+    ];
+
+    return popularCodes
+      .map(code => {
+        const lang = langs.where('3', code);
+        if (!lang) return null;
+        
+        return {
+          code,
+          name: lang.name,
+          native: lang.local || lang.name
+        };
+      })
+      .filter((lang): lang is LanguageOption => lang !== null)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const getAllLanguages = useCallback((): LanguageOption[] => {
+    return langs.all()
+      .filter((lang: LangItem) => lang['3'] && lang.name) // Only languages with ISO 639-3 codes
+      .map((lang: LangItem) => ({
+        code: lang['3'],
+        name: lang.name,
+        native: lang.local || lang.name
+      }))
+      .sort((a: LanguageOption, b: LanguageOption) => a.name.localeCompare(b.name));
+  }, []);
+
+  const searchLanguages = useCallback((query: string): LanguageOption[] => {
+    if (!query || query.length < 2) {
+      return [];
+    }
+
+    const searchTerm = query.toLowerCase();
+    const allLanguages = getAllLanguages();
+    
+    return allLanguages
+      .filter(lang => 
+        lang.name.toLowerCase().includes(searchTerm) ||
+        lang.native.toLowerCase().includes(searchTerm) ||
+        lang.code.toLowerCase().includes(searchTerm)
+      )
+      .slice(0, 20); // Limit results
+  }, [getAllLanguages]);
+
   // Load popular languages on mount
   useEffect(() => {
-    const popularLanguages = LanguageDetector.getPopularLanguages();
+    const popularLanguages = getPopularLanguages();
     setLanguages(popularLanguages);
     setFilteredLanguages(popularLanguages);
-  }, []);
+  }, [getPopularLanguages]);
 
   // Filter languages based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredLanguages(languages);
     } else {
-      const filtered = LanguageDetector.searchLanguages(searchQuery);
+      const filtered = searchLanguages(searchQuery);
       setFilteredLanguages(filtered);
     }
-  }, [searchQuery, languages]);
+  }, [searchQuery, languages, searchLanguages]);
 
   const selectedLanguage = languages.find(lang => lang.code === value);
 

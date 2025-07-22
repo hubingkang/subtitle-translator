@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, TestTube, Save, Plus } from 'lucide-react'
+import { Settings, TestTube, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -14,7 +15,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select'
 import { configManager } from '@/lib/config-manager'
 import { TranslationConfig, AIProvider } from '@/types/translation'
+import { cn } from '@/lib/utils'
 
 interface ConfigPanelProps {
   isOpen: boolean
@@ -111,32 +112,34 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
     field: keyof AIProvider,
     value: string | string[]
   ) => {
-    setConfig((prev) => ({
-      ...prev,
+    const updatedConfig = {
+      ...config,
       providers: {
-        ...prev.providers,
+        ...config.providers,
         [providerId]: {
-          ...prev.providers[providerId],
+          ...config.providers[providerId],
           [field]: value,
         },
       },
-    }))
+    }
+    setConfig(updatedConfig)
+    // Immediately sync to configManager and localStorage
+    configManager.updateProvider(providerId, { [field]: value })
   }
 
   const handleConfigUpdate = (
     field: keyof TranslationConfig,
     value: string | number
   ) => {
-    setConfig((prev) => ({
-      ...prev,
+    const updatedConfig = {
+      ...config,
       [field]: value,
-    }))
+    }
+    setConfig(updatedConfig)
+    // Immediately sync to configManager and localStorage
+    configManager.updateConfig({ [field]: value })
   }
 
-  const handleSave = () => {
-    configManager.updateConfig(config)
-    onClose()
-  }
 
   const handleTestConnection = async (providerId: string) => {
     const provider = config.providers[providerId]
@@ -151,10 +154,17 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
     setTesting((prev) => ({ ...prev, [providerId]: true }))
 
     try {
-      const response = await fetch(
-        `/api/translate?provider=${providerId}&model=${provider.models[0]}`
+      // Import TranslatorClient dynamically to avoid SSR issues
+      const { TranslatorClient } = await import(
+        '@/lib/client/translator-client'
       )
-      const result = await response.json()
+      const translator = new TranslatorClient()
+
+      // Use the selected model or default model or first model
+      const modelToTest =
+        provider.selectedModel || provider.defaultModel || provider.models[0]
+
+      const result = await translator.testConnection(providerId, modelToTest)
 
       setTestResults((prev) => ({
         ...prev,
@@ -230,7 +240,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
               </Button>
             </div>
 
-            <div className="mt-auto pt-4">
+            <div className="mt-auto pt-4 border-t">
               <Button
                 variant={viewMode === 'general' ? 'default' : 'ghost'}
                 size="sm"
@@ -262,7 +272,12 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                                 ? 'default'
                                 : 'destructive'
                             }
-                            className="text-xs"
+                            className={cn(
+                              'text-xs',
+                              testResults[selectedProvider].success
+                                ? 'bg-green-500 text-white'
+                                : 'bg-red-500 text-white'
+                            )}
                           >
                             {testResults[selectedProvider].success
                               ? 'Connected'
@@ -333,15 +348,47 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
 
                       <div className="space-y-2">
                         <Label>Available Models</Label>
-                        <div className="flex flex-wrap gap-2">
+                        <RadioGroup
+                          value={
+                            config.providers[selectedProvider].selectedModel ||
+                            config.providers[selectedProvider].defaultModel ||
+                            ''
+                          }
+                          onValueChange={(value) => {
+                            // Update both selectedModel for current selection and defaultModel for the provider
+                            handleProviderUpdate(
+                              selectedProvider,
+                              'selectedModel',
+                              value
+                            )
+                            handleProviderUpdate(
+                              selectedProvider,
+                              'defaultModel',
+                              value
+                            )
+                          }}
+                          className="grid grid-cols-1 gap-2"
+                        >
                           {config.providers[selectedProvider].models.map(
-                            (model, index) => (
-                              <Badge key={index} variant="outline">
-                                {model}
-                              </Badge>
+                            (model) => (
+                              <div
+                                key={model}
+                                className="flex items-center space-x-2"
+                              >
+                                <RadioGroupItem
+                                  value={model}
+                                  id={`${selectedProvider}-${model}`}
+                                />
+                                <Label
+                                  htmlFor={`${selectedProvider}-${model}`}
+                                  className="text-sm font-normal"
+                                >
+                                  {model}
+                                </Label>
+                              </div>
                             )
                           )}
-                        </div>
+                        </RadioGroup>
                       </div>
 
                       {config.providers[selectedProvider].isCustom && (
@@ -492,6 +539,34 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                       </Select>
                     </div>
 
+                    {config.providers[config.defaultProvider] && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Default Model</Label>
+                        <Select
+                          value={config.defaultModel || ''}
+                          onValueChange={(value) =>
+                            handleConfigUpdate('defaultModel', value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {config.providers[
+                              config.defaultProvider
+                            ].models.map((model) => (
+                              <SelectItem key={model} value={model}>
+                                {model}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Default model for the selected provider
+                        </p>
+                      </div>
+                    )}
+
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <Label className="text-sm">Concurrency</Label>
@@ -510,6 +585,27 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                       />
                       <p className="text-xs text-muted-foreground">
                         Number of simultaneous translations to process
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm">Subtitles per Batch</Label>
+                        <Badge variant="outline" className="text-xs">
+                          {config.subtitleBatchSize || 5}
+                        </Badge>
+                      </div>
+                      <Slider
+                        min={1}
+                        max={20}
+                        value={[config.subtitleBatchSize || 5]}
+                        onValueChange={([value]) =>
+                          handleConfigUpdate('subtitleBatchSize', value)
+                        }
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Number of subtitle entries to translate in each batch. Higher values provide better context but may be slower.
                       </p>
                     </div>
 
@@ -544,7 +640,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
           </div>
         </div>
 
-        <DialogFooter>
+        {/* <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -552,7 +648,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
             <Save className="h-4 w-4 mr-2" />
             Save Configuration
           </Button>
-        </DialogFooter>
+        </DialogFooter> */}
       </DialogContent>
     </Dialog>
   )

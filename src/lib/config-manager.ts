@@ -14,13 +14,37 @@ class ConfigManager {
       const stored = localStorage.getItem('translation-config');
       if (stored) {
         try {
-          return { ...defaultConfig, ...JSON.parse(stored) };
+          const config = { ...defaultConfig, ...JSON.parse(stored) };
+          // Ensure all providers have defaultModel set
+          Object.keys(config.providers).forEach(providerId => {
+            const provider = config.providers[providerId];
+            if (!provider.defaultModel && provider.models.length > 0) {
+              provider.defaultModel = provider.models[0];
+            }
+            // Initialize selectedModel to defaultModel if not set
+            if (!provider.selectedModel && provider.defaultModel) {
+              provider.selectedModel = provider.defaultModel;
+            }
+          });
+          return config;
         } catch (error) {
           console.warn('Invalid stored config, using defaults:', error);
         }
       }
     }
-    return defaultConfig as TranslationConfig;
+    const config = defaultConfig as TranslationConfig;
+    // Ensure all providers have defaultModel set
+    Object.keys(config.providers).forEach(providerId => {
+      const provider = config.providers[providerId];
+      if (!provider.defaultModel && provider.models.length > 0) {
+        provider.defaultModel = provider.models[0];
+      }
+      // Initialize selectedModel to defaultModel if not set
+      if (!provider.selectedModel && provider.defaultModel) {
+        provider.selectedModel = provider.defaultModel;
+      }
+    });
+    return config;
   }
 
   public getConfig(): TranslationConfig {
@@ -42,10 +66,13 @@ class ConfigManager {
 
   public addCustomProvider(provider: TranslationConfig['providers'][string]): string {
     const providerId = provider.id || provider.name.toLowerCase().replace(/\s+/g, '-');
+    const defaultModel = provider.defaultModel || provider.models[0] || '';
     this.config.providers[providerId] = {
       ...provider,
       id: providerId,
-      isCustom: true
+      isCustom: true,
+      defaultModel,
+      selectedModel: provider.selectedModel || defaultModel
     };
     this.saveConfig();
     return providerId;

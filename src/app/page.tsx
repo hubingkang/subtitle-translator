@@ -19,7 +19,15 @@ import { LanguageControlBar } from '@/components/language/LanguageControlBar'
 import { ConfigPanel } from '@/components/settings/ConfigPanel'
 import { ProgressTracker } from '@/components/progress/ProgressTracker'
 import { OutputPanel } from '@/components/output/OutputPanel'
-import { SubtitleFile, OutputFormat } from '@/types/translation'
+import {
+  SubtitleFile,
+  OutputFormat,
+  TranslationProgress,
+  TranslationResult,
+} from '@/types/translation'
+import { SubtitleParserClient } from '@/lib/client/subtitle-parser-client'
+import { TranslatorClient } from '@/lib/client/translator-client'
+
 import { configManager } from '@/lib/config-manager'
 
 export default function Home() {
@@ -39,35 +47,22 @@ export default function Home() {
 
     for (const file of files) {
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Upload failed')
-        }
-
-        const data = await response.json()
+        // Process file using client-side parser
+        const result = await SubtitleParserClient.processFile(file)
 
         const subtitleFile: SubtitleFile = {
           id: crypto.randomUUID(),
-          name: data.subtitle.name,
-          content: data.subtitle.content || '',
-          format: data.subtitle.format || 'srt',
-          entries: data.subtitle.entries,
-          textEntries: data.textEntries,
-          detectedLanguage: data.detectedLanguage || null,
+          name: result.subtitle.name,
+          content: result.subtitle.content || '',
+          format: result.subtitle.format || 'srt',
+          entries: result.subtitle.entries,
+          textEntries: result.textEntries,
         }
 
         newFiles.push(subtitleFile)
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : `Failed to upload ${file.name}`
+          err instanceof Error ? err.message : `Failed to process ${file.name}`
         )
       }
     }
@@ -105,96 +100,81 @@ export default function Home() {
 
     setSubtitleFiles(updatedFiles)
 
+    // console.log('updatedFiles', updatedFiles)
+    // return
     // Translate files that haven't been translated yet
     const filesToTranslate = updatedFiles.filter((file) => file.isTranslating)
 
-    for (const file of filesToTranslate) {
+    // Process all files concurrently
+    const translationPromises = filesToTranslate.map(async (file) => {
       try {
-        const response = await fetch('/api/translate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            texts: file.textEntries,
-            sourceLanguage,
-            targetLanguage,
-            provider: config.defaultProvider,
-            model: config.defaultModel,
-          }),
-        })
+        const translator = new TranslatorClient()
 
-        if (!response.ok) {
-          throw new Error('Translation failed')
-        }
-
-        const reader = response.body?.getReader()
-        if (!reader) throw new Error('No response stream')
-
-        const decoder = new TextDecoder()
-        let buffer = ''
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6))
-
-                if (data.type === 'progress') {
-                  setSubtitleFiles((prev) =>
-                    prev.map((f) =>
-                      f.id === file.id ? { ...f, progress: data.data } : f
-                    )
-                  )
-                } else if (data.type === 'complete') {
-                  const translatedEntries = file.entries.map(
-                    (entry, index) => ({
-                      ...entry,
-                      translatedText:
-                        data.data[index]?.translatedText || entry.text,
-                    })
-                  )
-
-                  setSubtitleFiles((prev) =>
-                    prev.map((f) =>
-                      f.id === file.id
-                        ? {
-                            ...f,
-                            translatedEntries,
-                            isTranslating: false,
-                          }
-                        : f
-                    )
-                  )
-                } else if (data.type === 'error') {
-                  throw new Error(data.error)
-                }
-              } catch (parseError) {
-                console.warn('Failed to parse SSE data:', parseError)
-              }
-            }
+        // Use optimized batch translation that only translates text content
+        const translationResults = await translator.translateBatch(
+          file.textEntries, // Only translate the extracted text content
+          sourceLanguage,
+          targetLanguage,
+          config.defaultProvider,
+          config.providers[config.defaultProvider]?.selectedModel ||
+            config.defaultModel,
+          (progress) => {
+            // Update progress in real-time
+            setSubtitleFiles((prev) =>
+              prev.map((f) => (f.id === file.id ? { ...f, progress } : f))
+            )
           }
-        }
+        )
+
+        // Map translation results back to subtitle entries
+        const translatedEntries = file.entries.map((entry, index) => ({
+          ...entry,
+          translatedText:
+            translationResults[index]?.translatedText || entry.text,
+        }))
+
+        setSubtitleFiles((prev) =>
+          prev.map((f) =>
+            f.id === file.id
+              ? {
+                  ...f,
+                  translatedEntries,
+                  isTranslating: false,
+                  progress: {
+                    total: file.textEntries.length,
+                    completed: file.textEntries.length,
+                    failed: 0,
+                  },
+                }
+              : f
+          )
+        )
       } catch (err) {
         setSubtitleFiles((prev) =>
           prev.map((f) =>
-            f.id === file.id ? { ...f, isTranslating: false } : f
+            f.id === file.id
+              ? {
+                  ...f,
+                  isTranslating: false,
+                  progress: {
+                    total: file.textEntries.length,
+                    completed: 0,
+                    failed: file.textEntries.length,
+                  },
+                }
+              : f
           )
         )
         setError(
           err instanceof Error
-            ? err.message
+            ? `${file.name}: ${err.message}`
             : `Translation failed for ${file.name}`
         )
       }
-    }
+    })
+
+    // Wait for all translations to complete
+    await Promise.allSettled(translationPromises)
   }
 
   const handleExport = async (
@@ -210,33 +190,13 @@ export default function Home() {
     setError(null)
 
     try {
-      const response = await fetch('/api/export', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          entries: file.translatedEntries,
-          format,
-          layout,
-          filename,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Export failed')
-      }
-
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${filename}.${format}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      // Use client-side download method
+      SubtitleParserClient.downloadFile(
+        file.translatedEntries,
+        format,
+        layout,
+        filename
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Export failed')
     } finally {

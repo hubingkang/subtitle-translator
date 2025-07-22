@@ -4,7 +4,8 @@ import { Languages, Play, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LanguageInput } from '@/components/language/LanguageInput'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { SubtitleFile } from '@/types/translation'
 
 interface LanguageControlBarProps {
@@ -78,22 +79,28 @@ export function LanguageControlBar({
 
             {/* Language Controls */}
             <div className="grid grid-cols-1 gap-4">
-              <div className="md:col-span-1">
-                <LanguageInput
+              <div className="space-y-2">
+                <Label htmlFor="source-language" className="text-sm font-medium">
+                  Source Language
+                </Label>
+                <Input
+                  id="source-language"
                   value={sourceLanguage}
-                  onChange={onSourceLanguageChange}
-                  label="Source Language"
-                  placeholder="e.g. English, Chinese, Spanish..."
+                  onChange={(e) => onSourceLanguageChange(e.target.value)}
+                  placeholder="Enter source language (e.g., English)"
                   disabled={isTranslating}
                 />
               </div>
 
-              <div className="md:col-span-1">
-                <LanguageInput
+              <div className="space-y-2">
+                <Label htmlFor="target-language" className="text-sm font-medium">
+                  Target Language
+                </Label>
+                <Input
+                  id="target-language"
                   value={targetLanguage}
-                  onChange={onTargetLanguageChange}
-                  label="Target Language"
-                  placeholder="e.g. English, Chinese, Spanish..."
+                  onChange={(e) => onTargetLanguageChange(e.target.value)}
+                  placeholder="Enter target language (e.g., Chinese)"
                   disabled={isTranslating}
                 />
               </div>

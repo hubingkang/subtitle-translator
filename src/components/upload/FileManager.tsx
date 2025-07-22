@@ -1,6 +1,6 @@
 'use client'
 
-import { X, FileText, CheckCircle, AlertCircle, Clock, Zap } from 'lucide-react'
+import { X, FileText, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -28,9 +28,6 @@ export function FileManager({
     if (file.translatedEntries && file.translatedEntries.length > 0) {
       return <CheckCircle className="h-4 w-4 text-green-500" />
     }
-    if (file.detectedLanguage) {
-      return <Zap className="h-4 w-4 text-yellow-500" />
-    }
     return <FileText className="h-4 w-4 text-muted-foreground" />
   }
 
@@ -40,9 +37,6 @@ export function FileManager({
     }
     if (file.translatedEntries && file.translatedEntries.length > 0) {
       return 'Translated'
-    }
-    if (file.detectedLanguage) {
-      return `Detected: ${file.detectedLanguage.name}`
     }
     return 'Ready'
   }
@@ -109,16 +103,7 @@ export function FileManager({
                   </div>
                 </div>
 
-                {file.detectedLanguage && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                    <span>Language: {file.detectedLanguage.name}</span>
-                    <span>•</span>
-                    <span>
-                      Confidence:{' '}
-                      {Math.round(file.detectedLanguage.confidence * 100)}%
-                    </span>
-                  </div>
-                )}
+
 
                 {file.sourceLanguage && file.targetLanguage && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Settings, Languages, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -17,13 +16,9 @@ import { FileUpload } from '@/components/upload/FileUpload'
 import { FileManager } from '@/components/upload/FileManager'
 import { LanguageControlBar } from '@/components/language/LanguageControlBar'
 import { ConfigPanel } from '@/components/settings/ConfigPanel'
-import { ProgressTracker } from '@/components/progress/ProgressTracker'
-import { OutputPanel } from '@/components/output/OutputPanel'
 import {
   SubtitleFile,
   OutputFormat,
-  TranslationProgress,
-  TranslationResult,
 } from '@/types/translation'
 import { SubtitleParserClient } from '@/lib/client/subtitle-parser-client'
 import { TranslatorClient } from '@/lib/client/translator-client'
@@ -35,7 +30,6 @@ export default function Home() {
   const [sourceLanguage, setSourceLanguage] = useState('')
   const [targetLanguage, setTargetLanguage] = useState('')
   const [isUploading, setIsUploading] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -177,30 +171,26 @@ export default function Home() {
     await Promise.allSettled(translationPromises)
   }
 
-  const handleExport = async (
-    fileId: string,
-    format: OutputFormat,
-    layout: 'original-top' | 'translation-top',
-    filename: string
-  ) => {
+  const handleDownload = async (fileId: string) => {
     const file = subtitleFiles.find((f) => f.id === fileId)
     if (!file?.translatedEntries?.length) return
 
-    setIsExporting(true)
     setError(null)
 
     try {
-      // Use client-side download method
+      // Generate filename with original format
+      const baseName = file.name.replace(/\.[^/.]+$/, '')
+      const filename = `${baseName}_translated`
+      
+      // Use client-side download method with original format and default layout
       SubtitleParserClient.downloadFile(
         file.translatedEntries,
-        format,
-        layout,
+        file.format as OutputFormat,
+        'original-top',
         filename
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed')
-    } finally {
-      setIsExporting(false)
+      setError(err instanceof Error ? err.message : 'Download failed')
     }
   }
 
@@ -216,9 +206,6 @@ export default function Home() {
   const validation = configManager.validateConfig()
   const hasValidConfig = validation.isValid
   const isAnyTranslating = subtitleFiles.some((file) => file.isTranslating)
-  const translatedFiles = subtitleFiles.filter(
-    (file) => file.translatedEntries?.length
-  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -288,74 +275,9 @@ export default function Home() {
               files={subtitleFiles}
               onRemoveFile={handleRemoveFile}
               onClearAll={handleClearAllFiles}
+              onDownload={handleDownload}
             />
 
-            {/* Progress Display */}
-            {isAnyTranslating && (
-              <div className="space-y-4">
-                {subtitleFiles
-                  .filter((file) => file.isTranslating && file.progress)
-                  .map((file) => (
-                    <Card key={file.id}>
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">{file.name}</span>
-                          <Badge variant="outline">Translating</Badge>
-                        </div>
-                        <ProgressTracker
-                          progress={file.progress!}
-                          isActive={file.isTranslating || false}
-                        />
-                      </CardContent>
-                    </Card>
-                  ))}
-              </div>
-            )}
-
-            {/* Export Panel */}
-            {translatedFiles.length > 0 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">Export Results</h2>
-                  <p className="text-muted-foreground mb-6">
-                    Download your translated subtitle files.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {translatedFiles.map((file) => (
-                    <Card key={file.id}>
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="font-semibold">{file.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {file.sourceLanguage} → {file.targetLanguage}
-                            </p>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 text-green-700 border-green-200"
-                          >
-                            Ready to Export
-                          </Badge>
-                        </div>
-                        <OutputPanel
-                          entries={file.translatedEntries!}
-                          originalFilename={file.name}
-                          sourceLanguage={file.sourceLanguage!}
-                          targetLanguage={file.targetLanguage!}
-                          onExport={(format, layout, filename) =>
-                            handleExport(file.id, format, layout, filename)
-                          }
-                          exporting={isExporting}
-                        />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Right Panel - Main Content */}

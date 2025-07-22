@@ -1,6 +1,6 @@
 'use client'
 
-import { X, FileText, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { X, FileText, CheckCircle, AlertCircle, Clock, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,12 +10,14 @@ interface FileManagerProps {
   files: SubtitleFile[]
   onRemoveFile: (fileId: string) => void
   onClearAll: () => void
+  onDownload: (fileId: string) => void
 }
 
 export function FileManager({
   files,
   onRemoveFile,
   onClearAll,
+  onDownload,
 }: FileManagerProps) {
   if (files.length === 0) {
     return null
@@ -103,16 +105,6 @@ export function FileManager({
                   </div>
                 </div>
 
-
-
-                {file.sourceLanguage && file.targetLanguage && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                    <span>
-                      {file.sourceLanguage} → {file.targetLanguage}
-                    </span>
-                  </div>
-                )}
-
                 {file.isTranslating && file.progress && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -138,14 +130,26 @@ export function FileManager({
                 )}
               </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemoveFile(file.id)}
-                className="flex-shrink-0 hover:bg-destructive/10 hover:text-destructive"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex-shrink-0 flex items-center gap-1">
+                {file.translatedEntries && file.translatedEntries.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDownload(file.id)}
+                    className="flex-shrink-0 hover:bg-primary/10 hover:text-primary"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveFile(file.id)}
+                  className="flex-shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>

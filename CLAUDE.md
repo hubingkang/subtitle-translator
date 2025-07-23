@@ -2,58 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-<workflow>
-1. 每当我输入新的需求的时候，为了规范需求质量和验收标准，你首先会搞清楚问题和需求
-2. 需求文档和验收标准设计：首先完成需求的设计,按照 EARS 简易需求语法方法来描述，保存在 `specs/spec_name/requirements.md` 中，跟我进行确认，最终确认清楚后，需求定稿，参考格式如下
-
-```markdown
-# 需求文档
-
-## 介绍
-
-需求描述
-
-## 需求
-
-### 需求 1 - 需求名称
-
-**用户故事：** 用户故事内容
-
-#### 验收标准
-
-1. 采用 ERAS 描述的子句 While <可选前置条件>, when <可选触发器>, the <系统名称> shall <系统响应>，例如 When 选择"静音"时，笔记本电脑应当抑制所有音频输出。
-2. ...
-   ...
-```
-
-2. 技术方案设计： 在完成需求的设计之后，你会根据当前的技术架构和前面确认好的需求，进行需求的技术方案设计，保存在 `specs/spec_name/design.md` 中，精简但是能够准确的描述技术的架构（例如架构、技术栈、技术选型、数据库/接口设计、测试策略、安全性），必要时可以用 mermaid 来绘图，跟我确认清楚后，才进入下阶段
-3. 任务拆分：在完成技术方案设计后，你会根据需求文档和技术方案，细化具体要做的事情，保存在`specs/spec_name/tasks.md` 中, 跟我确认清楚后，才开始正式执行任务，同时更新任务的状态
-
-格式如下
-
-```markdown
-# 实施计划
-
-- [ ] 1. 任务信息
-- 具体要做的事情
-- ...
-- \_需求: 相关的需求点的编号
-```
-
-当完成某项任务时，根据任务的编号，在 `specs/spec_name/tasks.md` 中更新任务的状态，并更新任务的进度，同时更新任务的完成时间
-
-```markdown
-# 实施计划
-
-- [x] 1. 任务信息
-- ...
-```
-
-</workflow>
-
 ## 项目概览
 
-这是一个 Next.js 15 字幕翻译应用程序，使用 AI 在语言之间翻译字幕文件（SRT、VTT、ASS）。支持多个 AI 提供商（OpenAI、Anthropic、Google），并提供实时翻译进度跟踪和并发处理。
+这是一个 Next.js 15 字幕翻译和格式转换应用程序，支持 9 种字幕格式（SUB、SRT、SBV、VTT、SSA、ASS、SMI、LRC、JSON）的相互转换和 AI 智能翻译。集成了 4 个主流 AI 提供商（OpenAI、Anthropic、Google AI、SiliconFlow）以及自定义提供商支持，提供实时翻译进度跟踪、批量处理和客户端本地处理能力。
 
 ## Development Commands
 
@@ -68,13 +19,14 @@ Please use `pnpm` instead of `npm` to install dependencies.
 
 ### Tech Stack
 
-- **Framework**: Next.js 15 with App Router and Server-Sent Events for streaming
+- **Framework**: Next.js 15 with App Router, React 19, and client-side processing
 - **Language**: TypeScript with strict mode
-- **Styling**: Tailwind CSS v4 with CSS variables and dark mode support
+- **Styling**: Tailwind CSS v4 with CSS variables and dark/light theme support
 - **UI Components**: shadcn/ui (New York style variant) with Radix UI primitives
-- **AI Integration**: Vercel AI SDK with support for OpenAI, Anthropic, and Google AI
-- **Language Selection**: Manual language selection with comprehensive language support
-- **Subtitle Processing**: subsrt for parsing and generating multiple subtitle formats
+- **AI Integration**: Vercel AI SDK with support for OpenAI, Anthropic, Google AI, SiliconFlow, and custom providers
+- **Language Selection**: Manual language selection with comprehensive language support (ISO 639-3 codes)
+- **Subtitle Processing**: subsrt-ts for client-side parsing and generating 9 subtitle formats
+- **State Management**: React hooks with localStorage persistence and browser sync
 
 shadcn/ui is used for the UI components. The installation method for the components is as follows.
 
@@ -89,75 +41,88 @@ example: `pnpm dlx shadcn@latest add button`
 ```
 src/
 ├── app/
-│   ├── api/           # API routes for upload, translate, export
-│   ├── page.tsx       # Main application interface
-│   └── layout.tsx     # Root layout with fonts
+│   ├── page.tsx           # Main translation interface
+│   ├── converter/         # Format conversion page
+│   │   └── page.tsx       # Converter interface
+│   └── layout.tsx         # Root layout with theme provider
 ├── components/
-│   ├── ui/            # shadcn/ui base components
-│   ├── upload/        # File upload with drag-and-drop
-│   ├── language/      # Language detection and selection
-│   ├── settings/      # AI provider configuration
-│   ├── progress/      # Real-time translation progress
-│   └── output/        # Export and download functionality
+│   ├── ui/                # shadcn/ui base components
+│   ├── upload/            # File upload with drag-and-drop validation
+│   ├── language/          # Language selection components
+│   ├── settings/          # AI provider configuration modals
+│   ├── progress/          # Real-time translation progress tracking
+│   ├── output/            # Export and download functionality
+│   └── converter/         # Format conversion components
 ├── lib/
-│   ├── config-manager.ts    # AI provider configuration management
+│   ├── client/            # Client-side processing utilities
+│   │   └── subtitle-parser-client.ts # Client-side subtitle parsing
+│   ├── config-manager.ts  # AI provider configuration management
 │   ├── language-selector.ts # Language selection utilities
-│   ├── subtitle-parser.ts   # subsrt wrapper for subtitle processing
-│   └── translator.ts        # AI translation with concurrency control
+│   ├── subtitle-parser.ts # Server-side subtitle processing
+│   ├── translator.ts      # AI translation with batch processing
+│   └── theme-provider.tsx # Dark/light theme context
 ├── types/
-│   └── translation.ts       # TypeScript definitions
+│   └── translation.ts     # TypeScript definitions
 └── config/
     └── translation-config.json # Default AI provider settings
 ```
 
 ### Key Features
 
-#### Subtitle Processing
+#### Subtitle Format Support & Conversion
 
-- **Multi-format Support**: SRT, VTT, ASS, SSA subtitle formats
-- **Manual Selection**: Users manually select source and target languages from comprehensive language list
-- **Text Extraction**: Parses subtitle files and extracts text while preserving timing information
-- **Format Validation**: Validates subtitle file structure before processing
+- **9 Format Support**: SUB, SRT, SBV, VTT, SSA, ASS, SMI, LRC, JSON with bidirectional conversion
+- **Format Converter**: Dedicated converter page (`/converter`) for pure format conversion without translation
+- **Client-side Processing**: All subtitle parsing and format conversion happens in the browser
+- **Format Validation**: Comprehensive validation and error handling for each subtitle format
+- **Batch Processing**: Support for multiple file processing with progress tracking
 
 #### AI Translation System
 
-- **Multi-provider Support**: OpenAI, Anthropic, Google AI with unified interface via Vercel AI SDK
-- **Concurrent Processing**: Configurable concurrency (1-10 simultaneous translations) with retry logic
-- **Progress Tracking**: Real-time progress updates via Server-Sent Events
-- **Error Handling**: Automatic retry with exponential backoff for failed translations
+- **4 AI Providers**: OpenAI, Anthropic, Google AI, SiliconFlow with unified interface via Vercel AI SDK
+- **Custom Provider Support**: Ability to add custom AI providers with configurable endpoints
+- **Dual Translation Modes**: Main translation page (`/`) and format conversion page (`/converter`)
+- **Batch Translation**: Process multiple subtitle files simultaneously with concurrency control
+- **Progress Tracking**: Real-time progress updates with detailed status information
+- **Error Handling**: Automatic retry with exponential backoff and comprehensive error reporting
 
-#### Configuration Management
+#### Advanced Configuration
 
-- **Provider Setup**: API key management for multiple AI providers
-- **Model Selection**: Dynamic model selection per provider
-- **Settings Persistence**: localStorage-based configuration with browser sync
-- **Connection Testing**: Built-in API connection testing for each provider
+- **Multi-provider Management**: API key management and model selection for each provider
+- **Connection Testing**: Built-in API connection testing and validation
+- **Settings Persistence**: localStorage-based configuration with cross-browser synchronization
+- **Theme Support**: Full dark/light theme integration with system preference detection
+- **Responsive Design**: Mobile-first responsive design with touch-optimized interfaces
 
-#### Export Options
+#### Export & Output Options
 
-- **Dual Language Output**: Original text on top/bottom or translation on top/bottom
-- **Multiple Formats**: Export to SRT, VTT, or ASS with preserved timing
-- **Custom Naming**: User-configurable output filenames
-- **Preview**: Live preview of final subtitle format before export
-
-### API Routes
-
-- **POST /api/upload**: Handles file upload, parsing, and language detection
-- **POST /api/translate**: Streaming translation endpoint with progress updates
-- **GET /api/translate**: Connection testing for AI providers
-- **POST /api/export**: Generates and downloads translated subtitle files
+- **Flexible Layout Options**: Original on top/bottom, translation on top/bottom configurations
+- **Multi-format Export**: Export to any of the 9 supported subtitle formats
+- **Custom File Naming**: User-configurable output filenames with format extensions
+- **Batch Download**: Support for downloading multiple processed files
+- **Live Preview**: Real-time preview of subtitle output before download
 
 ### Configuration
 
-- **AI Providers**: Configured in `src/config/translation-config.json`
+- **AI Providers**: Configured in `src/config/translation-config.json` with 4 default providers
+- **Custom Providers**: Support for adding custom AI endpoints and configurations
 - **Default Settings**: 3 concurrent translations, original-on-top layout, 2 max retries
 - **Path Aliases**: `@/components`, `@/lib`, `@/types`, `@/config`
-- **Environment**: Supports API keys via configuration panel (no .env file needed)
+- **Environment**: API keys managed via configuration panel (no .env file needed)
+- **Theme Configuration**: Automatic dark/light mode detection with manual override
+
+### Application Routes
+
+- **Main Translation** (`/`): Full AI translation interface with multi-provider support
+- **Format Converter** (`/converter`): Pure format conversion without AI translation
+- **Responsive Navigation**: Mobile-optimized navigation with theme toggle
 
 ### Development Notes
 
 - **Language Support**: Uses ISO 639-3 language codes with langs package for human-readable names
-- **Streaming**: Server-Sent Events for real-time progress updates during translation
-- **Error Handling**: Comprehensive error handling with user-friendly messages
-- **Accessibility**: Full keyboard navigation and screen reader support via Radix UI
-- **Performance**: Turbopack for fast development builds, optimized bundle for production
+- **Client-side Architecture**: All subtitle processing happens in the browser using subsrt-ts
+- **Performance Optimization**: Turbopack for fast development builds, optimized bundle for production
+- **Error Handling**: Comprehensive error handling with user-friendly messages and retry mechanisms
+- **Accessibility**: Full keyboard navigation and screen reader support via Radix UI primitives
+- **Type Safety**: Strict TypeScript configuration with comprehensive type definitions
+- **State Management**: React hooks pattern with localStorage persistence and cross-tab synchronization

@@ -70,7 +70,7 @@ export interface SubtitleFile {
   isTranslating?: boolean;
 }
 
-export type OutputFormat = 'srt' | 'vtt' | 'ass';
+export type OutputFormat = 'sub' | 'srt' | 'sbv' | 'vtt' | 'ssa' | 'ass' | 'smi' | 'lrc' | 'json';
 
 export interface ExportOptions {
   format: OutputFormat;

@@ -1,0 +1,375 @@
+'use client'
+
+import { useState } from 'react'
+import { FileText, Download, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { FileUpload } from '@/components/upload/FileUpload'
+import { SubtitleFile, OutputFormat } from '@/types/translation'
+import { SubtitleParserClient } from '@/lib/client/subtitle-parser-client'
+
+const availableFormats: { value: OutputFormat; label: string; description: string }[] = [
+  { value: 'sub', label: 'SUB', description: 'MicroDVD SUB Format' },
+  { value: 'srt', label: 'SRT', description: 'SubRip Subtitle Format' },
+  { value: 'sbv', label: 'SBV', description: 'SubViewer Format' },
+  { value: 'vtt', label: 'VTT', description: 'WebVTT Format' },
+  { value: 'ssa', label: 'SSA', description: 'SubStation Alpha Format' },
+  { value: 'ass', label: 'ASS', description: 'Advanced SubStation Alpha' },
+  { value: 'smi', label: 'SMI', description: 'SAMI Format' },
+  { value: 'lrc', label: 'LRC', description: 'LRC Lyrics Format' },
+  { value: 'json', label: 'JSON', description: 'JSON Format' },
+]
+
+interface ConversionFile extends Omit<SubtitleFile, 'textEntries' | 'translatedEntries'> {
+  isConverting?: boolean
+}
+
+export default function ConverterPage() {
+  const [subtitleFiles, setSubtitleFiles] = useState<ConversionFile[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [globalSelectedFormats, setGlobalSelectedFormats] = useState<OutputFormat[]>([])
+
+  const handleFilesSelect = async (files: File[]) => {
+    setIsUploading(true)
+    setError(null)
+
+    const newFiles: ConversionFile[] = []
+
+    for (const file of files) {
+      try {
+        // Process file using client-side parser
+        const result = await SubtitleParserClient.processFile(file)
+
+        const conversionFile: ConversionFile = {
+          id: crypto.randomUUID(),
+          name: result.subtitle.name,
+          content: result.subtitle.content || '',
+          format: result.subtitle.format || 'srt',
+          entries: result.subtitle.entries,
+        }
+
+        newFiles.push(conversionFile)
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : `Failed to process ${file.name}`
+        )
+      }
+    }
+
+    if (newFiles.length > 0) {
+      setSubtitleFiles((prev) => [...prev, ...newFiles])
+    }
+
+    setIsUploading(false)
+  }
+
+  const handleRemoveFile = (fileId: string) => {
+    setSubtitleFiles((prev) => prev.filter((file) => file.id !== fileId))
+  }
+
+  const handleGlobalFormatToggle = (format: OutputFormat, checked: boolean) => {
+    setGlobalSelectedFormats((prev) =>
+      checked ? [...prev, format] : prev.filter((f) => f !== format)
+    )
+  }
+
+  const handleSelectAllFormats = () => {
+    setGlobalSelectedFormats([...availableFormats.map(f => f.value)])
+  }
+
+  const handleDeselectAllFormats = () => {
+    setGlobalSelectedFormats([])
+  }
+
+  const handleConvertFile = async (fileId: string) => {
+    const file = subtitleFiles.find((f) => f.id === fileId)
+    if (!file || globalSelectedFormats.length === 0) return
+
+    setSubtitleFiles((prev) =>
+      prev.map((f) => (f.id === fileId ? { ...f, isConverting: true } : f))
+    )
+
+    setError(null)
+
+    try {
+      // Generate downloads for each selected format
+      for (const format of globalSelectedFormats) {
+        // Generate filename for the new format
+        const baseName = file.name.replace(/\.[^/.]+$/, '')
+        const filename = `${baseName}.${format}`
+
+        // Use client-side download method (even for same format)
+        SubtitleParserClient.downloadFile(
+          file.entries,
+          format,
+          'original-top', // Default layout for conversion
+          filename
+        )
+
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Conversion failed')
+    } finally {
+      setSubtitleFiles((prev) =>
+        prev.map((f) => (f.id === fileId ? { ...f, isConverting: false } : f))
+      )
+    }
+  }
+
+  const handleConvertAll = async () => {
+    if (globalSelectedFormats.length === 0 || subtitleFiles.length === 0) return
+
+    const filesToConvert = subtitleFiles.filter((file) => !file.isConverting)
+
+    // Mark all files as converting
+    setSubtitleFiles((prev) =>
+      prev.map((f) =>
+        filesToConvert.some((cf) => cf.id === f.id)
+          ? { ...f, isConverting: true }
+          : f
+      )
+    )
+
+    setError(null)
+
+    try {
+      // Process all files sequentially to avoid overwhelming the browser
+      for (const file of filesToConvert) {
+        for (const format of globalSelectedFormats) {
+          // Generate filename for the new format
+          const baseName = file.name.replace(/\.[^/.]+$/, '')
+          const filename = `${baseName}.${format}`
+
+          // Use client-side download method (even for same format)
+          SubtitleParserClient.downloadFile(
+            file.entries,
+            format,
+            'original-top', // Default layout for conversion
+            filename
+          )
+
+          // Small delay between downloads
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Batch conversion failed')
+    } finally {
+      // Mark all files as not converting
+      setSubtitleFiles((prev) =>
+        prev.map((f) =>
+          filesToConvert.some((cf) => cf.id === f.id)
+            ? { ...f, isConverting: false }
+            : f
+        )
+      )
+    }
+  }
+
+  const handleClearAllFiles = () => {
+    setSubtitleFiles([])
+  }
+
+  const hasFilesAndFormats = subtitleFiles.length > 0 && globalSelectedFormats.length > 0
+  const isAnyConverting = subtitleFiles.some((file) => file.isConverting)
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* Page Header */}
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">字幕格式转换</h1>
+            <p className="text-muted-foreground">
+              上传字幕文件，选择目标格式，一键转换下载
+            </p>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <Card className="border-destructive bg-destructive/5">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="font-medium">错误</span>
+                </div>
+                <p className="text-destructive/80 mt-1">{error}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* File Upload */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                上传字幕文件
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FileUpload
+                onFilesSelect={handleFilesSelect}
+                loading={isUploading}
+                multiple={true}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Global Format Selection */}
+          {subtitleFiles.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    转换格式选择 ({globalSelectedFormats.length} 个已选中)
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAllFormats}
+                      disabled={isAnyConverting}
+                    >
+                      全选
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeselectAllFormats}
+                      disabled={isAnyConverting}
+                    >
+                      全不选
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="text-sm text-muted-foreground">
+                    选择要转换的目标格式，将自动应用到所有文件
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {availableFormats.map((format) => {
+                      const isSelected = globalSelectedFormats.includes(format.value)
+                      
+                      return (
+                        <div
+                          key={format.value}
+                          className="flex items-start space-x-3 p-3 rounded-lg border bg-background"
+                        >
+                          <Checkbox
+                            id={`global-${format.value}`}
+                            checked={isSelected}
+                            disabled={isAnyConverting}
+                            onCheckedChange={(checked) =>
+                              handleGlobalFormatToggle(format.value, checked as boolean)
+                            }
+                          />
+                          <div className="grid gap-1.5 leading-none">
+                            <label
+                              htmlFor={`global-${format.value}`}
+                              className="text-sm font-medium leading-none cursor-pointer"
+                            >
+                              {format.label}
+                            </label>
+                            <p className="text-xs text-muted-foreground">
+                              {format.description}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Files List */}
+          {subtitleFiles.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>文件列表 ({subtitleFiles.length})</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearAllFiles}
+                      disabled={isAnyConverting}
+                    >
+                      清空全部
+                    </Button>
+                    <Button
+                      onClick={handleConvertAll}
+                      disabled={!hasFilesAndFormats || isAnyConverting}
+                      size="sm"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      转换全部 ({globalSelectedFormats.length} 格式)
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {subtitleFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="border rounded-lg p-4"
+                    >
+                      {/* File Info */}
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="font-medium">{file.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            原格式: {file.format.toUpperCase()} • {file.entries.length} 条字幕
+                            {globalSelectedFormats.length > 0 && (
+                              <span className="ml-2">
+                                → 将转换为: {globalSelectedFormats.map(f => f.toUpperCase()).join(', ')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => handleConvertFile(file.id)}
+                            disabled={globalSelectedFormats.length === 0 || file.isConverting}
+                            size="sm"
+                          >
+                            {file.isConverting ? (
+                              <>转换中...</>
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4 mr-2" />
+                                转换下载
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveFile(file.id)}
+                            disabled={file.isConverting}
+                          >
+                            移除
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}

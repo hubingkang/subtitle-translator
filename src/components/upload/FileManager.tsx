@@ -11,6 +11,7 @@ interface FileManagerProps {
   onRemoveFile: (fileId: string) => void
   onClearAll: () => void
   onDownload: (fileId: string) => void
+  onDownloadAll: () => void
 }
 
 export function FileManager({
@@ -18,6 +19,7 @@ export function FileManager({
   onRemoveFile,
   onClearAll,
   onDownload,
+  onDownloadAll,
 }: FileManagerProps) {
   if (files.length === 0) {
     return null
@@ -48,6 +50,11 @@ export function FileManager({
     return Math.round((file.progress.completed / file.progress.total) * 100)
   }
 
+  // Check if there are any completed files to download
+  const completedFiles = files.filter(file => 
+    file.translatedEntries && file.translatedEntries.length > 0
+  )
+
   return (
     <Card>
       <CardContent>
@@ -58,16 +65,29 @@ export function FileManager({
               Uploaded Files ({files.length})
             </h3>
           </div>
-          {files.length > 1 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClearAll}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              Clear All
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {completedFiles.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDownloadAll}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download All ({completedFiles.length})
+              </Button>
+            )}
+            {files.length > 1 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClearAll}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3">

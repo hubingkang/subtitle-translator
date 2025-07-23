@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Settings, Languages, AlertCircle } from 'lucide-react'
+import { Settings, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -16,10 +16,7 @@ import { FileUpload } from '@/components/upload/FileUpload'
 import { FileManager } from '@/components/upload/FileManager'
 import { LanguageControlBar } from '@/components/language/LanguageControlBar'
 import { ConfigPanel } from '@/components/settings/ConfigPanel'
-import {
-  SubtitleFile,
-  OutputFormat,
-} from '@/types/translation'
+import { SubtitleFile, OutputFormat } from '@/types/translation'
 import { SubtitleParserClient } from '@/lib/client/subtitle-parser-client'
 import { TranslatorClient } from '@/lib/client/translator-client'
 
@@ -43,6 +40,8 @@ export default function Home() {
       try {
         // Process file using client-side parser
         const result = await SubtitleParserClient.processFile(file)
+
+        console.log('result', result)
 
         const subtitleFile: SubtitleFile = {
           id: crypto.randomUUID(),
@@ -180,8 +179,8 @@ export default function Home() {
     try {
       // Generate filename with original format
       const baseName = file.name.replace(/\.[^/.]+$/, '')
-      const filename = `${baseName}_translated`
-      
+      const filename = `${baseName}`
+
       // Use client-side download method with original format and default layout
       SubtitleParserClient.downloadFile(
         file.translatedEntries,
@@ -198,6 +197,38 @@ export default function Home() {
     setSubtitleFiles((prev) => prev.filter((file) => file.id !== fileId))
   }
 
+  const handleDownloadAll = async () => {
+    const completedFiles = subtitleFiles.filter(file => 
+      file.translatedEntries && file.translatedEntries.length > 0
+    )
+
+    if (completedFiles.length === 0) return
+
+    setError(null)
+
+    try {
+      // Download all completed files sequentially to avoid overwhelming the browser
+      for (const file of completedFiles) {
+        // Generate filename with original format
+        const baseName = file.name.replace(/\.[^/.]+$/, '')
+        const filename = `${baseName}`
+
+        // Use client-side download method with original format and default layout
+        SubtitleParserClient.downloadFile(
+          file.translatedEntries!,
+          file.format as OutputFormat,
+          'original-top',
+          filename
+        )
+
+        // Small delay between downloads to ensure proper browser handling
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Batch download failed')
+    }
+  }
+
   const handleClearAllFiles = () => {
     setSubtitleFiles([])
   }
@@ -209,29 +240,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Languages className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">Subtitle Translator</h1>
-                <p className="text-xs text-muted-foreground">
-                  AI-powered subtitle translation
-                </p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={() => setShowConfig(true)}>
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* <div className="grid lg:grid-cols-[320px,1fr] gap-8"> */}
@@ -276,8 +284,8 @@ export default function Home() {
               onRemoveFile={handleRemoveFile}
               onClearAll={handleClearAllFiles}
               onDownload={handleDownload}
+              onDownloadAll={handleDownloadAll}
             />
-
           </div>
 
           {/* Right Panel - Main Content */}

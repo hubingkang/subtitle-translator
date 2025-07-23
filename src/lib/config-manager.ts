@@ -162,6 +162,77 @@ class ConfigManager {
     };
   }
 
+  public addModelToProvider(providerId: string, modelName: string): boolean {
+    const provider = this.config.providers[providerId];
+    if (!provider) return false;
+    
+    const trimmedModelName = modelName.trim();
+    if (!trimmedModelName || provider.models.includes(trimmedModelName)) {
+      return false; // Empty name or model already exists
+    }
+    
+    provider.models.push(trimmedModelName);
+    
+    // If this is the first model, set it as default and selected
+    if (provider.models.length === 1) {
+      provider.defaultModel = trimmedModelName;
+      provider.selectedModel = trimmedModelName;
+    }
+    
+    this.saveConfig();
+    return true;
+  }
+
+  public removeModelFromProvider(providerId: string, modelName: string): boolean {
+    const provider = this.config.providers[providerId];
+    if (!provider || provider.models.length <= 1) {
+      return false; // Don't allow removing the last model
+    }
+    
+    const modelIndex = provider.models.indexOf(modelName);
+    if (modelIndex === -1) return false;
+    
+    // Remove the model
+    provider.models.splice(modelIndex, 1);
+    
+    // Update defaultModel if it was the removed model
+    if (provider.defaultModel === modelName) {
+      provider.defaultModel = provider.models[0];
+    }
+    
+    // Update selectedModel if it was the removed model
+    if (provider.selectedModel === modelName) {
+      provider.selectedModel = provider.models[0];
+    }
+    
+    this.saveConfig();
+    return true;
+  }
+
+  public updateProviderModels(providerId: string, models: string[]): boolean {
+    const provider = this.config.providers[providerId];
+    if (!provider || models.length === 0) return false;
+    
+    // Remove duplicates and empty strings
+    const uniqueModels = [...new Set(models.filter(model => model.trim()))];
+    if (uniqueModels.length === 0) return false;
+    
+    provider.models = uniqueModels;
+    
+    // Ensure defaultModel is still valid
+    if (!provider.defaultModel || !uniqueModels.includes(provider.defaultModel)) {
+      provider.defaultModel = uniqueModels[0];
+    }
+    
+    // Ensure selectedModel is still valid
+    if (!provider.selectedModel || !uniqueModels.includes(provider.selectedModel)) {
+      provider.selectedModel = provider.defaultModel;
+    }
+    
+    this.saveConfig();
+    return true;
+  }
+
   public resetToDefaults(): void {
     this.config = defaultConfig as TranslationConfig;
     this.saveConfig();

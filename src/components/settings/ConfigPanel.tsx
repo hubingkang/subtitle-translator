@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { ModelManager } from '@/components/settings/ModelManager'
 import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -107,6 +107,16 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
     }
   }
 
+  const handleModelsChange = (providerId: string, models: string[]) => {
+    configManager.updateProviderModels(providerId, models)
+    setConfig(configManager.getConfig())
+  }
+
+  const handleSelectedModelChange = (providerId: string, model: string) => {
+    handleProviderUpdate(providerId, 'selectedModel', model)
+    handleProviderUpdate(providerId, 'defaultModel', model)
+  }
+
   const handleProviderUpdate = (
     providerId: string,
     field: keyof AIProvider,
@@ -139,7 +149,6 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
     // Immediately sync to configManager and localStorage
     configManager.updateConfig({ [field]: value })
   }
-
 
   const handleTestConnection = async (providerId: string) => {
     const provider = config.providers[providerId]
@@ -195,10 +204,10 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
 
         <div className="flex gap-8 min-h-[600px]">
           {/* Left Panel - Provider Selection & Navigation */}
-          <div className="w-64 border-r pr-8 space-y-4 flex flex-col">
+          <div className="w-64 border-r space-y-4 flex flex-col">
             <div className="flex-1">
               <h3 className="text-sm font-medium mb-3">AI Providers</h3>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-8">
                 {Object.entries(config.providers).map(
                   ([providerId, provider]) => (
                     <Button
@@ -210,7 +219,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                           : 'ghost'
                       }
                       size="sm"
-                      className="w-full justify-start"
+                      className="w-full justify-start cursor-pointer"
                       onClick={() => {
                         setSelectedProvider(providerId)
                         setViewMode('provider')
@@ -229,22 +238,24 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                 )}
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-4"
-                onClick={() => setViewMode('addProvider')}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Provider
-              </Button>
+              <div className="pr-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-4 cursor-pointer"
+                  onClick={() => setViewMode('addProvider')}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Provider
+                </Button>
+              </div>
             </div>
 
-            <div className="mt-auto pt-4 border-t">
+            <div className="mt-auto pt-4 border-t pr-8">
               <Button
-                variant={viewMode === 'general' ? 'default' : 'ghost'}
+                variant={viewMode === 'general' ? 'default' : 'outline'}
                 size="sm"
-                className="w-full"
+                className="w-full cursor-pointer"
                 onClick={() => setViewMode('general')}
               >
                 <Settings className="h-4 w-4 mr-2" />
@@ -346,56 +357,23 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label>Available Models</Label>
-                        <RadioGroup
-                          value={
-                            config.providers[selectedProvider].selectedModel ||
-                            config.providers[selectedProvider].defaultModel ||
-                            ''
-                          }
-                          onValueChange={(value) => {
-                            // Update both selectedModel for current selection and defaultModel for the provider
-                            handleProviderUpdate(
-                              selectedProvider,
-                              'selectedModel',
-                              value
-                            )
-                            handleProviderUpdate(
-                              selectedProvider,
-                              'defaultModel',
-                              value
-                            )
-                          }}
-                          className="grid grid-cols-1 gap-2"
-                        >
-                          {config.providers[selectedProvider].models.map(
-                            (model) => (
-                              <div
-                                key={model}
-                                className="flex items-center space-x-2"
-                              >
-                                <RadioGroupItem
-                                  value={model}
-                                  id={`${selectedProvider}-${model}`}
-                                />
-                                <Label
-                                  htmlFor={`${selectedProvider}-${model}`}
-                                  className="text-sm font-normal"
-                                >
-                                  {model}
-                                </Label>
-                              </div>
-                            )
-                          )}
-                        </RadioGroup>
-                      </div>
+                      <ModelManager
+                        models={config.providers[selectedProvider].models}
+                        selectedModel={
+                          config.providers[selectedProvider].selectedModel ||
+                          config.providers[selectedProvider].defaultModel ||
+                          ''
+                        }
+                        onModelsChange={(models) => handleModelsChange(selectedProvider, models)}
+                        onSelectedModelChange={(model) => handleSelectedModelChange(selectedProvider, model)}
+                      />
 
                       {config.providers[selectedProvider].isCustom && (
                         <div className="pt-2">
                           <Button
                             variant="destructive"
                             size="sm"
+                            className="cursor-pointer"
                             onClick={() =>
                               handleRemoveProvider(selectedProvider)
                             }
@@ -605,7 +583,8 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                         className="w-full"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Number of subtitle entries to translate in each batch. Higher values provide better context but may be slower.
+                        Number of subtitle entries to translate in each batch.
+                        Higher values provide better context but may be slower.
                       </p>
                     </div>
 

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { ModelManager } from '@/components/settings/ModelManager';
 import { AIProvider } from '@/types/translation';
 
 interface ProviderManagerProps {
@@ -21,7 +21,8 @@ interface ProviderFormData {
   name: string;
   apiKey: string;
   baseURL: string;
-  models: string;
+  models: string[];
+  selectedModel?: string;
 }
 
 export function ProviderManager({ 
@@ -36,22 +37,22 @@ export function ProviderManager({
     name: '',
     apiKey: '',
     baseURL: '',
-    models: ''
+    models: [],
+    selectedModel: '',
   });
 
   const customProviders = Object.entries(providers).filter(([, provider]) => provider.isCustom);
 
   const handleSubmit = () => {
-    if (!formData.name.trim() || !formData.apiKey.trim()) return;
+    if (!formData.name.trim() || !formData.apiKey.trim() || formData.models.length === 0) return;
 
     const provider: AIProvider = {
       name: formData.name,
       apiKey: formData.apiKey,
       baseURL: formData.baseURL || undefined,
-      models: formData.models
-        .split('\\n')
-        .map(m => m.trim())
-        .filter(m => m.length > 0),
+      models: formData.models,
+      defaultModel: formData.selectedModel || formData.models[0],
+      selectedModel: formData.selectedModel || formData.models[0],
       isCustom: true
     };
 
@@ -70,14 +71,15 @@ export function ProviderManager({
       name: provider.name,
       apiKey: provider.apiKey,
       baseURL: provider.baseURL || '',
-      models: provider.models.join('\\n')
+      models: provider.models,
+      selectedModel: provider.selectedModel || provider.defaultModel || provider.models[0]
     });
     setEditingProvider(providerId);
     setShowAddForm(true);
   };
 
   const resetForm = () => {
-    setFormData({ name: '', apiKey: '', baseURL: '', models: '' });
+    setFormData({ name: '', apiKey: '', baseURL: '', models: [], selectedModel: '' });
     setShowAddForm(false);
     setEditingProvider(null);
   };
@@ -135,22 +137,18 @@ export function ProviderManager({
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="provider-models">Models (one per line)</Label>
-              <Textarea
-                id="provider-models"
-                value={formData.models}
-                onChange={(e) => setFormData(prev => ({ ...prev, models: e.target.value }))}
-                placeholder="gpt-4&#10;gpt-3.5-turbo"
-                rows={3}
-              />
-            </div>
+            <ModelManager
+              models={formData.models}
+              selectedModel={formData.selectedModel}
+              onModelsChange={(models) => setFormData(prev => ({ ...prev, models }))}
+              onSelectedModelChange={(model) => setFormData(prev => ({ ...prev, selectedModel: model }))}
+            />
             
             <div className="flex gap-2 pt-2">
               <Button 
                 size="sm" 
                 onClick={handleSubmit}
-                disabled={!formData.name.trim() || !formData.apiKey.trim()}
+                disabled={!formData.name.trim() || !formData.apiKey.trim() || formData.models.length === 0}
               >
                 {editingProvider ? 'Update' : 'Add'} Provider
               </Button>

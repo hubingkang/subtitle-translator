@@ -26,7 +26,9 @@ export function FileUpload({
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
 
     if (!allowedExtensions.includes(fileExtension)) {
-      return t('unsupportedFileType', { extensions: allowedExtensions.join(', ') })
+      return t('unsupportedFileType', {
+        extensions: allowedExtensions.join(', '),
+      })
     }
 
     if (file.size > 10 * 1024 * 1024) {
@@ -140,9 +142,7 @@ export function FileUpload({
                   : t('uploadSubtitleFile')}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {multiple
-                  ? t('dragAndDropMultiple')
-                  : t('dragAndDropSingle')}
+                {multiple ? t('dragAndDropMultiple') : t('dragAndDropSingle')}
               </p>
             </div>
 

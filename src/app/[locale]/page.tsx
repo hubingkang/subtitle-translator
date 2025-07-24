@@ -201,8 +201,8 @@ export default function Home() {
   }
 
   const handleDownloadAll = async () => {
-    const completedFiles = subtitleFiles.filter(file => 
-      file.translatedEntries && file.translatedEntries.length > 0
+    const completedFiles = subtitleFiles.filter(
+      (file) => file.translatedEntries && file.translatedEntries.length > 0
     )
 
     if (completedFiles.length === 0) return
@@ -225,7 +225,7 @@ export default function Home() {
         )
 
         // Small delay between downloads to ensure proper browser handling
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Batch download failed')
@@ -302,7 +302,9 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">{t('aiProvider')}</Label>
+                  <Label className="text-sm font-medium">
+                    {t('aiProvider')}
+                  </Label>
                   <Select
                     value={config.defaultProvider}
                     onValueChange={(value) =>

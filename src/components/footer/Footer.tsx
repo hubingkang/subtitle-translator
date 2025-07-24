@@ -1,6 +1,6 @@
 'use client'
 
-import { Languages, Github, Heart } from 'lucide-react'
+import { Languages, Heart } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 export function Footer() {

@@ -206,11 +206,11 @@ export function ModelManager({
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteModel')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('deleteModelConfirm', { model: modelToDelete })}
+              {t('deleteModelConfirm', { model: modelToDelete as string })}
               {selectedModel === modelToDelete && models.length > 1 && (
                 <Badge variant="outline" className="text-xs mt-2">
                   {t('deleteModelNote', {
-                    newModel: models.find((m) => m !== modelToDelete),
+                    newModel: models.find((m) => m !== modelToDelete) as string,
                   })}
                 </Badge>
               )}

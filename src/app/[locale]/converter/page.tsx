@@ -7,13 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FileUpload } from '@/components/upload/FileUpload'
-import { SubtitleFile, OutputFormat } from '@/types/translation'
+import { OutputFormat, ConversionFile } from '@/types/translation'
 import { SubtitleParserClient } from '@/lib/client/subtitle-parser-client'
 
 export default function ConverterPage() {
   const t = useTranslations('converter')
-  
-  const availableFormats: { value: OutputFormat; label: string; descriptionKey: string }[] = [
+
+  const availableFormats: {
+    value: OutputFormat
+    label: string
+    descriptionKey: string
+  }[] = [
     { value: 'sub', label: 'SUB', descriptionKey: 'formatDescriptions.sub' },
     { value: 'srt', label: 'SRT', descriptionKey: 'formatDescriptions.srt' },
     { value: 'sbv', label: 'SBV', descriptionKey: 'formatDescriptions.sbv' },
@@ -24,11 +28,13 @@ export default function ConverterPage() {
     { value: 'lrc', label: 'LRC', descriptionKey: 'formatDescriptions.lrc' },
     { value: 'json', label: 'JSON', descriptionKey: 'formatDescriptions.json' },
   ]
-  
+
   const [subtitleFiles, setSubtitleFiles] = useState<ConversionFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [globalSelectedFormats, setGlobalSelectedFormats] = useState<OutputFormat[]>([])
+  const [globalSelectedFormats, setGlobalSelectedFormats] = useState<
+    OutputFormat[]
+  >([])
 
   const handleFilesSelect = async (files: File[]) => {
     setIsUploading(true)
@@ -75,7 +81,7 @@ export default function ConverterPage() {
   }
 
   const handleSelectAllFormats = () => {
-    setGlobalSelectedFormats([...availableFormats.map(f => f.value)])
+    setGlobalSelectedFormats([...availableFormats.map((f) => f.value)])
   }
 
   const handleDeselectAllFormats = () => {
@@ -108,7 +114,7 @@ export default function ConverterPage() {
         )
 
         // Small delay between downloads
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Conversion failed')
@@ -152,7 +158,7 @@ export default function ConverterPage() {
           )
 
           // Small delay between downloads
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100))
         }
       }
     } catch (err) {
@@ -173,7 +179,8 @@ export default function ConverterPage() {
     setSubtitleFiles([])
   }
 
-  const hasFilesAndFormats = subtitleFiles.length > 0 && globalSelectedFormats.length > 0
+  const hasFilesAndFormats =
+    subtitleFiles.length > 0 && globalSelectedFormats.length > 0
   const isAnyConverting = subtitleFiles.some((file) => file.isConverting)
 
   return (
@@ -184,9 +191,7 @@ export default function ConverterPage() {
           {/* Page Header */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-            <p className="text-muted-foreground">
-              {t('description')}
-            </p>
+            <p className="text-muted-foreground">{t('description')}</p>
           </div>
 
           {/* Error Display */}
@@ -226,7 +231,8 @@ export default function ConverterPage() {
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    {t('formatSelection')} ({globalSelectedFormats.length}{t('selectedCount')})
+                    {t('formatSelection')} ({globalSelectedFormats.length}
+                    {t('selectedCount')})
                   </span>
                   <div className="flex items-center gap-2">
                     <Button
@@ -255,8 +261,10 @@ export default function ConverterPage() {
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {availableFormats.map((format) => {
-                      const isSelected = globalSelectedFormats.includes(format.value)
-                      
+                      const isSelected = globalSelectedFormats.includes(
+                        format.value
+                      )
+
                       return (
                         <div
                           key={format.value}
@@ -267,7 +275,10 @@ export default function ConverterPage() {
                             checked={isSelected}
                             disabled={isAnyConverting}
                             onCheckedChange={(checked) =>
-                              handleGlobalFormatToggle(format.value, checked as boolean)
+                              handleGlobalFormatToggle(
+                                format.value,
+                                checked as boolean
+                              )
                             }
                           />
                           <div className="grid gap-1.5 leading-none">
@@ -295,7 +306,9 @@ export default function ConverterPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{t('fileList')} ({subtitleFiles.length})</CardTitle>
+                  <CardTitle>
+                    {t('fileList')} ({subtitleFiles.length})
+                  </CardTitle>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -311,7 +324,8 @@ export default function ConverterPage() {
                       size="sm"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      {t('convertAll')} ({globalSelectedFormats.length}{t('formats')})
+                      {t('convertAll')} ({globalSelectedFormats.length}
+                      {t('formats')})
                     </Button>
                   </div>
                 </div>
@@ -319,19 +333,21 @@ export default function ConverterPage() {
               <CardContent>
                 <div className="space-y-4">
                   {subtitleFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      className="border rounded-lg p-4"
-                    >
+                    <div key={file.id} className="border rounded-lg p-4">
                       {/* File Info */}
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <div className="font-medium">{file.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            {t('originalFormat')}: {file.format.toUpperCase()} • {file.entries.length}{t('subtitleCount')}
+                            {t('originalFormat')}: {file.format.toUpperCase()} •{' '}
+                            {file.entries.length}
+                            {t('subtitleCount')}
                             {globalSelectedFormats.length > 0 && (
                               <span className="ml-2">
-                                {t('convertTo')}: {globalSelectedFormats.map(f => f.toUpperCase()).join(', ')}
+                                {t('convertTo')}:{' '}
+                                {globalSelectedFormats
+                                  .map((f) => f.toUpperCase())
+                                  .join(', ')}
                               </span>
                             )}
                           </div>
@@ -339,7 +355,10 @@ export default function ConverterPage() {
                         <div className="flex items-center gap-2">
                           <Button
                             onClick={() => handleConvertFile(file.id)}
-                            disabled={globalSelectedFormats.length === 0 || file.isConverting}
+                            disabled={
+                              globalSelectedFormats.length === 0 ||
+                              file.isConverting
+                            }
                             size="sm"
                           >
                             {file.isConverting ? (

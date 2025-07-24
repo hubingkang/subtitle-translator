@@ -2,25 +2,29 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { Languages, FileText } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { cn } from '@/lib/utils'
-
-const navigationItems = [
-  {
-    name: '字幕翻译',
-    href: '/',
-    icon: Languages,
-  },
-  {
-    name: '格式转换',
-    href: '/converter',
-    icon: FileText,
-  },
-]
 
 export function Navigation() {
   const pathname = usePathname()
+  const locale = useLocale()
+  const t = useTranslations('navigation')
+
+  const navigationItems = [
+    {
+      name: t('subtitleTranslation'),
+      href: `/${locale}`,
+      icon: Languages,
+    },
+    {
+      name: t('formatConversion'),
+      href: `/${locale}/converter`,
+      icon: FileText,
+    },
+  ]
 
   return (
     <header className="border-b bg-card">
@@ -90,6 +94,7 @@ export function Navigation() {
               })}
             </nav>
             
+            <LanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>

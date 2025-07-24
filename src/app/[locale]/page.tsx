@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Settings, AlertCircle } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -23,6 +24,8 @@ import { TranslatorClient } from '@/lib/client/translator-client'
 import { configManager } from '@/lib/config-manager'
 
 export default function Home() {
+  const t = useTranslations('translation')
+  const tCommon = useTranslations('common')
   const [subtitleFiles, setSubtitleFiles] = useState<SubtitleFile[]>([])
   const [sourceLanguage, setSourceLanguage] = useState('')
   const [targetLanguage, setTargetLanguage] = useState('')
@@ -252,7 +255,7 @@ export default function Home() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2 text-destructive">
                     <AlertCircle className="h-5 w-5" />
-                    <span className="font-medium">Error</span>
+                    <span className="font-medium">{tCommon('error')}</span>
                   </div>
                   <p className="text-destructive/80 mt-1">{error}</p>
                 </CardContent>
@@ -294,12 +297,12 @@ export default function Home() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Settings className="h-5 w-5" />
-                  Settings
+                  {t('settings')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">AI Provider</Label>
+                  <Label className="text-sm font-medium">{t('aiProvider')}</Label>
                   <Select
                     value={config.defaultProvider}
                     onValueChange={(value) =>
@@ -326,7 +329,7 @@ export default function Home() {
                     className="w-full mt-2"
                   >
                     <Settings className="h-4 w-4 mr-2" />
-                    Configure Providers
+                    {t('configureProviders')}
                   </Button>
                 </div>
               </CardContent>

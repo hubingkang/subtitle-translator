@@ -114,7 +114,6 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
 
   const handleSelectedModelChange = (providerId: string, model: string) => {
     handleProviderUpdate(providerId, 'selectedModel', model)
-    handleProviderUpdate(providerId, 'defaultModel', model)
   }
 
   const handleProviderUpdate = (

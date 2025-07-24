@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { FileText, Download, AlertCircle } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -26,6 +27,7 @@ interface ConversionFile extends Omit<SubtitleFile, 'textEntries' | 'translatedE
 }
 
 export default function ConverterPage() {
+  const t = useTranslations('converter')
   const [subtitleFiles, setSubtitleFiles] = useState<ConversionFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -184,9 +186,9 @@ export default function ConverterPage() {
         <div className="space-y-8">
           {/* Page Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">字幕格式转换</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
             <p className="text-muted-foreground">
-              上传字幕文件，选择目标格式，一键转换下载
+              {t('description')}
             </p>
           </div>
 
@@ -196,7 +198,7 @@ export default function ConverterPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 text-destructive">
                   <AlertCircle className="h-5 w-5" />
-                  <span className="font-medium">错误</span>
+                  <span className="font-medium">{t('error')}</span>
                 </div>
                 <p className="text-destructive/80 mt-1">{error}</p>
               </CardContent>
@@ -208,7 +210,7 @@ export default function ConverterPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                上传字幕文件
+                {t('uploadFiles')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -227,7 +229,7 @@ export default function ConverterPage() {
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    转换格式选择 ({globalSelectedFormats.length} 个已选中)
+                    {t('formatSelection')} ({globalSelectedFormats.length}{t('selectedCount')})
                   </span>
                   <div className="flex items-center gap-2">
                     <Button
@@ -236,7 +238,7 @@ export default function ConverterPage() {
                       onClick={handleSelectAllFormats}
                       disabled={isAnyConverting}
                     >
-                      全选
+                      {t('selectAll')}
                     </Button>
                     <Button
                       variant="outline"
@@ -244,7 +246,7 @@ export default function ConverterPage() {
                       onClick={handleDeselectAllFormats}
                       disabled={isAnyConverting}
                     >
-                      全不选
+                      {t('deselectAll')}
                     </Button>
                   </div>
                 </CardTitle>
@@ -252,7 +254,7 @@ export default function ConverterPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="text-sm text-muted-foreground">
-                    选择要转换的目标格式，将自动应用到所有文件
+                    {t('selectFormatsDescription')}
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {availableFormats.map((format) => {
@@ -296,7 +298,7 @@ export default function ConverterPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>文件列表 ({subtitleFiles.length})</CardTitle>
+                  <CardTitle>{t('fileList')} ({subtitleFiles.length})</CardTitle>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -304,7 +306,7 @@ export default function ConverterPage() {
                       onClick={handleClearAllFiles}
                       disabled={isAnyConverting}
                     >
-                      清空全部
+                      {t('clearAll')}
                     </Button>
                     <Button
                       onClick={handleConvertAll}
@@ -312,7 +314,7 @@ export default function ConverterPage() {
                       size="sm"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      转换全部 ({globalSelectedFormats.length} 格式)
+                      {t('convertAll')} ({globalSelectedFormats.length}{t('formats')})
                     </Button>
                   </div>
                 </div>
@@ -329,10 +331,10 @@ export default function ConverterPage() {
                         <div className="space-y-1">
                           <div className="font-medium">{file.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            原格式: {file.format.toUpperCase()} • {file.entries.length} 条字幕
+                            {t('originalFormat')}: {file.format.toUpperCase()} • {file.entries.length}{t('subtitleCount')}
                             {globalSelectedFormats.length > 0 && (
                               <span className="ml-2">
-                                → 将转换为: {globalSelectedFormats.map(f => f.toUpperCase()).join(', ')}
+                                {t('convertTo')}: {globalSelectedFormats.map(f => f.toUpperCase()).join(', ')}
                               </span>
                             )}
                           </div>
@@ -344,11 +346,11 @@ export default function ConverterPage() {
                             size="sm"
                           >
                             {file.isConverting ? (
-                              <>转换中...</>
+                              <>{t('converting')}</>
                             ) : (
                               <>
                                 <Download className="h-4 w-4 mr-2" />
-                                转换下载
+                                {t('convertDownload')}
                               </>
                             )}
                           </Button>
@@ -358,7 +360,7 @@ export default function ConverterPage() {
                             onClick={() => handleRemoveFile(file.id)}
                             disabled={file.isConverting}
                           >
-                            移除
+                            {t('remove')}
                           </Button>
                         </div>
                       </div>

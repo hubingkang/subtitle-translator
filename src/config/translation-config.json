@@ -5,14 +5,24 @@
       "apiKey": "",
       "baseURL": "https://api.siliconflow.cn/v1",
       "models": ["Pro/deepseek-ai/DeepSeek-V3"],
-      "defaultModel": "Pro/deepseek-ai/DeepSeek-V3"
+      "defaultModel": "Pro/deepseek-ai/DeepSeek-V3",
+      "selectedModel": "Pro/deepseek-ai/DeepSeek-V3"
+    },
+    "deepseek": {
+      "name": "deepseek",
+      "apiKey": "",
+      "baseURL": "https://api.deepseek.com/v1",
+      "models": ["deepseek-chat"],
+      "defaultModel": "deepseek-chat",
+      "selectedModel": "deepseek-chat"
     },
     "openai": {
       "name": "OpenAI",
       "apiKey": "",
       "baseURL": "https://api.openai.com/v1",
       "models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
-      "defaultModel": "gpt-4o"
+      "defaultModel": "gpt-4o",
+      "selectedModel": "gpt-4o"
     },
     "anthropic": {
       "name": "Anthropic",
@@ -23,14 +33,16 @@
         "claude-3-haiku-20240307",
         "claude-3-sonnet-20240229"
       ],
-      "defaultModel": "claude-3-5-sonnet-20241022"
+      "defaultModel": "claude-3-5-sonnet-20241022",
+      "selectedModel": "claude-3-5-sonnet-20241022"
     },
     "google": {
       "name": "Google AI",
       "apiKey": "",
       "baseURL": "https://generativelanguage.googleapis.com/v1beta",
       "models": ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
-      "defaultModel": "gemini-1.5-pro"
+      "defaultModel": "gemini-1.5-pro",
+      "selectedModel": "gemini-1.5-pro"
     }
   },
   "defaultProvider": "siliconflow",

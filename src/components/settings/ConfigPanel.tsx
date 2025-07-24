@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Settings, TestTube, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +43,8 @@ interface ProviderFormData {
 }
 
 export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
+  const t = useTranslations('config')
+  const tCommon = useTranslations('common')
   const [config, setConfig] = useState<TranslationConfig>(
     configManager.getConfig()
   )
@@ -154,7 +157,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
     if (!provider.apiKey.trim()) {
       setTestResults((prev) => ({
         ...prev,
-        [providerId]: { success: false, error: 'API key is required' },
+        [providerId]: { success: false, error: t('apiKeyRequired') },
       }))
       return
     }
@@ -197,7 +200,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Translation Configuration
+            {t('title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -205,7 +208,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
           {/* Left Panel - Provider Selection & Navigation */}
           <div className="w-64 border-r space-y-4 flex flex-col">
             <div className="flex-1">
-              <h3 className="text-sm font-medium mb-3">AI Providers</h3>
+              <h3 className="text-sm font-medium mb-3">{t('aiProviders')}</h3>
               <div className="space-y-2 max-h-[400px] overflow-y-auto pr-8">
                 {Object.entries(config.providers).map(
                   ([providerId, provider]) => (
@@ -228,7 +231,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                         <span>{provider.name}</span>
                         {provider.isCustom && (
                           <Badge variant="secondary" className="text-xs">
-                            Custom
+                            {t('custom')}
                           </Badge>
                         )}
                       </div>
@@ -245,7 +248,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                   onClick={() => setViewMode('addProvider')}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Provider
+                  {t('addProvider')}
                 </Button>
               </div>
             </div>
@@ -258,7 +261,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                 onClick={() => setViewMode('general')}
               >
                 <Settings className="h-4 w-4 mr-2" />
-                General Settings
+                {t('generalSettings')}
               </Button>
             </div>
           </div>
@@ -272,7 +275,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">
-                        {config.providers[selectedProvider].name} Configuration
+                        {config.providers[selectedProvider].name} {t('configuration')}
                       </CardTitle>
                       <div className="flex items-center gap-2">
                         {testResults[selectedProvider] && (
@@ -290,8 +293,8 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                             )}
                           >
                             {testResults[selectedProvider].success
-                              ? 'Connected'
-                              : 'Failed'}
+                              ? t('connected')
+                              : t('failed')}
                           </Badge>
                         )}
                         <Button
@@ -308,7 +311,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                           ) : (
                             <TestTube className="h-3 w-3" />
                           )}
-                          <span className="ml-1">Test Connection</span>
+                          <span className="ml-1">{t('testConnection')}</span>
                         </Button>
                       </div>
                     </div>
@@ -318,7 +321,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                     <div className="grid grid-cols-1 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor={`${selectedProvider}-key`}>
-                          API Key
+                          {t('apiKey')}
                         </Label>
                         <Input
                           id={`${selectedProvider}-key`}
@@ -331,13 +334,13 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                               e.target.value
                             )
                           }
-                          placeholder="Enter your API key"
+                          placeholder={t('apiKeyPlaceholder')}
                         />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor={`${selectedProvider}-url`}>
-                          Base URL (Optional)
+                          {t('baseUrl')}
                         </Label>
                         <Input
                           id={`${selectedProvider}-url`}
@@ -352,7 +355,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                               e.target.value
                             )
                           }
-                          placeholder="Custom API endpoint"
+                          placeholder={t('customEndpoint')}
                         />
                       </div>
 
@@ -377,7 +380,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                               handleRemoveProvider(selectedProvider)
                             }
                           >
-                            Remove Provider
+                            {t('removeProvider')}
                           </Button>
                         </div>
                       )}
@@ -386,7 +389,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                     {testResults[selectedProvider] &&
                       !testResults[selectedProvider].success && (
                         <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-                          <strong>Error:</strong>{' '}
+                          <strong>{t('errorPrefix')}</strong>{' '}
                           {testResults[selectedProvider].error}
                         </div>
                       )}
@@ -397,12 +400,12 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
             {viewMode === 'addProvider' && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Add Custom Provider</CardTitle>
+                  <CardTitle className="text-lg">{t('addCustomProvider')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="provider-name">Provider Name</Label>
+                      <Label htmlFor="provider-name">{t('providerName')}</Label>
                       <Input
                         id="provider-name"
                         value={formData.name}
@@ -412,11 +415,11 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                             name: e.target.value,
                           }))
                         }
-                        placeholder="e.g., Local LLM"
+                        placeholder={t('providerNamePlaceholder')}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="provider-key">API Key</Label>
+                      <Label htmlFor="provider-key">{t('apiKey')}</Label>
                       <Input
                         id="provider-key"
                         type="password"
@@ -427,13 +430,13 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                             apiKey: e.target.value,
                           }))
                         }
-                        placeholder="Enter API key"
+                        placeholder={t('apiKeyPlaceholder')}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="provider-url">Base URL (Optional)</Label>
+                    <Label htmlFor="provider-url">{t('baseUrl')}</Label>
                     <Input
                       id="provider-url"
                       type="url"
@@ -444,13 +447,13 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                           baseURL: e.target.value,
                         }))
                       }
-                      placeholder="https://api.example.com/v1"
+                      placeholder={t('baseUrlPlaceholder')}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="provider-models">
-                      Model Names (one per line)
+                      {t('modelNames')}
                     </Label>
                     <Textarea
                       id="provider-models"
@@ -461,7 +464,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                           models: e.target.value,
                         }))
                       }
-                      placeholder="gpt-4\ngpt-3.5-turbo"
+                      placeholder={t('modelNamesPlaceholder')}
                       rows={4}
                     />
                   </div>
@@ -473,13 +476,13 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                         !formData.name.trim() || !formData.apiKey.trim()
                       }
                     >
-                      Add Provider
+                      {t('addProvider')}
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => setViewMode('provider')}
                     >
-                      Cancel
+                      {tCommon('cancel')}
                     </Button>
                   </div>
                 </CardContent>
@@ -489,12 +492,12 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
             {viewMode === 'general' && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">General Settings</CardTitle>
+                  <CardTitle className="text-lg">{t('generalSettings')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-sm">Default Provider</Label>
+                      <Label className="text-sm">{t('defaultProvider')}</Label>
                       <Select
                         value={config.defaultProvider}
                         onValueChange={(value) =>
@@ -518,7 +521,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
 
                     {config.providers[config.defaultProvider] && (
                       <div className="space-y-2">
-                        <Label className="text-sm">Default Model</Label>
+                        <Label className="text-sm">{t('defaultModel')}</Label>
                         <Select
                           value={config.defaultModel || ''}
                           onValueChange={(value) =>
@@ -526,7 +529,7 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a model" />
+                            <SelectValue placeholder={t('selectModel')} />
                           </SelectTrigger>
                           <SelectContent>
                             {config.providers[
@@ -539,14 +542,14 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          Default model for the selected provider
+                          {t('defaultModelDescription')}
                         </p>
                       </div>
                     )}
 
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <Label className="text-sm">Concurrency</Label>
+                        <Label className="text-sm">{t('concurrency')}</Label>
                         <Badge variant="outline" className="text-xs">
                           {config.concurrency}
                         </Badge>
@@ -561,13 +564,13 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                         className="w-full"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Number of simultaneous translations to process
+                        {t('concurrencyDescription')}
                       </p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <Label className="text-sm">Subtitles per Batch</Label>
+                        <Label className="text-sm">{t('subtitlesPerBatch')}</Label>
                         <Badge variant="outline" className="text-xs">
                           {config.subtitleBatchSize || 5}
                         </Badge>
@@ -582,13 +585,12 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                         className="w-full"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Number of subtitle entries to translate in each batch.
-                        Higher values provide better context but may be slower.
+                        {t('subtitlesPerBatchDescription')}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm">Output Format</Label>
+                      <Label className="text-sm">{t('outputFormat')}</Label>
                       <Select
                         value={config.outputFormat}
                         onValueChange={(value) =>
@@ -600,15 +602,15 @@ export function ConfigPanel({ isOpen, onClose }: ConfigPanelProps) {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="original-top">
-                            Original on top
+                            {t('originalOnTop')}
                           </SelectItem>
                           <SelectItem value="translation-top">
-                            Translation on top
+                            {t('translationOnTop')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        Default layout for exported subtitle files
+                        {t('outputFormatDescription')}
                       </p>
                     </div>
                   </div>

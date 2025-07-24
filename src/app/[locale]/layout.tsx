@@ -1,18 +1,27 @@
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages } from 'next-intl/server'
+import { getMessages, getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import '../globals.css'
 import { ThemeProvider } from '@/lib/theme-provider'
 import { Navigation } from '@/components/navigation/Navigation'
 import { Footer } from '@/components/footer/Footer'
 
-export const metadata: Metadata = {
-  title: 'Subtitle Tools',
-  description: 'AI-powered subtitle translation and format conversion',
-}
-
 const locales = ['zh', 'en']
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'metadata' })
+
+  return {
+    title: t('title'),
+    description: t('description'),
+  }
+}
 
 export default async function LocaleLayout({
   children,

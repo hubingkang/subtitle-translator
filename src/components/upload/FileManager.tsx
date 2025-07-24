@@ -1,6 +1,7 @@
 'use client'
 
 import { X, FileText, CheckCircle, AlertCircle, Clock, Download } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +22,7 @@ export function FileManager({
   onDownload,
   onDownloadAll,
 }: FileManagerProps) {
+  const t = useTranslations('fileManager')
   if (files.length === 0) {
     return null
   }
@@ -37,12 +39,12 @@ export function FileManager({
 
   const getFileStatusText = (file: SubtitleFile) => {
     if (file.isTranslating) {
-      return 'Translating...'
+      return t('translating')
     }
     if (file.translatedEntries && file.translatedEntries.length > 0) {
-      return 'Translated'
+      return t('translated')
     }
-    return 'Ready'
+    return t('ready')
   }
 
   const getProgressPercentage = (file: SubtitleFile) => {
@@ -62,7 +64,7 @@ export function FileManager({
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             <h3 className="text-lg font-semibold">
-              Uploaded Files ({files.length})
+              {t('uploadedFiles')} ({files.length})
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -74,7 +76,7 @@ export function FileManager({
                 className="text-muted-foreground hover:text-primary"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download All ({completedFiles.length})
+                {t('downloadAll')} ({completedFiles.length})
               </Button>
             )}
             {files.length > 1 && (
@@ -84,7 +86,7 @@ export function FileManager({
                 onClick={onClearAll}
                 className="text-muted-foreground hover:text-destructive"
               >
-                Clear All
+                {t('clearAll')}
               </Button>
             )}
           </div>
@@ -108,7 +110,7 @@ export function FileManager({
                   </h4>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge variant="secondary" className="text-xs">
-                      {file.entries.length} entries
+                      {file.entries.length} {t('entries')}
                     </Badge>
                     <Badge
                       variant="outline"
@@ -129,7 +131,7 @@ export function FileManager({
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>
-                        Progress: {file.progress.completed}/
+                        {t('progress')} {file.progress.completed}/
                         {file.progress.total}
                       </span>
                       <span>{getProgressPercentage(file)}%</span>
@@ -143,7 +145,7 @@ export function FileManager({
                     {file.progress.failed > 0 && (
                       <div className="flex items-center gap-1 text-xs text-destructive">
                         <AlertCircle className="h-3 w-3" />
-                        <span>{file.progress.failed} failed</span>
+                        <span>{file.progress.failed} {t('failed')}</span>
                       </div>
                     )}
                   </div>

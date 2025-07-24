@@ -10,24 +10,21 @@ import { FileUpload } from '@/components/upload/FileUpload'
 import { SubtitleFile, OutputFormat } from '@/types/translation'
 import { SubtitleParserClient } from '@/lib/client/subtitle-parser-client'
 
-const availableFormats: { value: OutputFormat; label: string; description: string }[] = [
-  { value: 'sub', label: 'SUB', description: 'MicroDVD SUB Format' },
-  { value: 'srt', label: 'SRT', description: 'SubRip Subtitle Format' },
-  { value: 'sbv', label: 'SBV', description: 'SubViewer Format' },
-  { value: 'vtt', label: 'VTT', description: 'WebVTT Format' },
-  { value: 'ssa', label: 'SSA', description: 'SubStation Alpha Format' },
-  { value: 'ass', label: 'ASS', description: 'Advanced SubStation Alpha' },
-  { value: 'smi', label: 'SMI', description: 'SAMI Format' },
-  { value: 'lrc', label: 'LRC', description: 'LRC Lyrics Format' },
-  { value: 'json', label: 'JSON', description: 'JSON Format' },
-]
-
-interface ConversionFile extends Omit<SubtitleFile, 'textEntries' | 'translatedEntries'> {
-  isConverting?: boolean
-}
-
 export default function ConverterPage() {
   const t = useTranslations('converter')
+  
+  const availableFormats: { value: OutputFormat; label: string; descriptionKey: string }[] = [
+    { value: 'sub', label: 'SUB', descriptionKey: 'formatDescriptions.sub' },
+    { value: 'srt', label: 'SRT', descriptionKey: 'formatDescriptions.srt' },
+    { value: 'sbv', label: 'SBV', descriptionKey: 'formatDescriptions.sbv' },
+    { value: 'vtt', label: 'VTT', descriptionKey: 'formatDescriptions.vtt' },
+    { value: 'ssa', label: 'SSA', descriptionKey: 'formatDescriptions.ssa' },
+    { value: 'ass', label: 'ASS', descriptionKey: 'formatDescriptions.ass' },
+    { value: 'smi', label: 'SMI', descriptionKey: 'formatDescriptions.smi' },
+    { value: 'lrc', label: 'LRC', descriptionKey: 'formatDescriptions.lrc' },
+    { value: 'json', label: 'JSON', descriptionKey: 'formatDescriptions.json' },
+  ]
+  
   const [subtitleFiles, setSubtitleFiles] = useState<ConversionFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -281,7 +278,7 @@ export default function ConverterPage() {
                               {format.label}
                             </label>
                             <p className="text-xs text-muted-foreground">
-                              {format.description}
+                              {t(format.descriptionKey)}
                             </p>
                           </div>
                         </div>

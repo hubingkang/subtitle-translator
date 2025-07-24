@@ -126,3 +126,7 @@ src/
 - **Accessibility**: Full keyboard navigation and screen reader support via Radix UI primitives
 - **Type Safety**: Strict TypeScript configuration with comprehensive type definitions
 - **State Management**: React hooks pattern with localStorage persistence and cross-tab synchronization
+
+## 重要
+
+当代码内容新增重要功能或者对上面现有功能有较大改动更新时，及时同步到当前 CLAUDE.md 文件中，避免内容过时

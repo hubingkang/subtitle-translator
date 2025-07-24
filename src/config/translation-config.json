@@ -8,6 +8,14 @@
       "defaultModel": "Pro/deepseek-ai/DeepSeek-V3",
       "selectedModel": "Pro/deepseek-ai/DeepSeek-V3"
     },
+    "alibailian": {
+      "name": "阿里云百炼",
+      "apiKey": "",
+      "baseURL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "models": ["qwen-vl-max"],
+      "defaultModel": "qwen-vl-max",
+      "selectedModel": "qwen-vl-max"
+    },
     "deepseek": {
       "name": "deepseek",
       "apiKey": "",
@@ -24,23 +32,11 @@
       "defaultModel": "gpt-4o",
       "selectedModel": "gpt-4o"
     },
-    "anthropic": {
-      "name": "Anthropic",
-      "apiKey": "",
-      "baseURL": "https://api.anthropic.com",
-      "models": [
-        "claude-3-5-sonnet-20241022",
-        "claude-3-haiku-20240307",
-        "claude-3-sonnet-20240229"
-      ],
-      "defaultModel": "claude-3-5-sonnet-20241022",
-      "selectedModel": "claude-3-5-sonnet-20241022"
-    },
     "google": {
       "name": "Google AI",
       "apiKey": "",
       "baseURL": "https://generativelanguage.googleapis.com/v1beta",
-      "models": ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
+      "models": ["gemini-1.5-pro", "gemini-1.5-flash"],
       "defaultModel": "gemini-1.5-pro",
       "selectedModel": "gemini-1.5-pro"
     }

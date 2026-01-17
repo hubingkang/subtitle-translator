@@ -1,7 +1,9 @@
 {
   "navigation": {
     "subtitleTranslation": "字幕翻译",
-    "formatConversion": "格式转换"
+    "formatConversion": "格式转换",
+    "appTitle": "字幕工具",
+    "appDescription": "AI 驱动的字幕处理"
   },
   "converter": {
     "title": "字幕格式转换",
@@ -22,52 +24,129 @@
     "convertTo": "将转换为",
     "converting": "转换中...",
     "convertDownload": "转换下载",
-    "remove": "移除"
+    "remove": "移除",
+    "formatDescriptions": {
+      "sub": "MicroDVD SUB 格式",
+      "srt": "SubRip 字幕格式",
+      "sbv": "SubViewer 格式",
+      "vtt": "WebVTT 格式",
+      "ssa": "SubStation Alpha 格式",
+      "ass": "高级 SubStation Alpha",
+      "smi": "SAMI 格式",
+      "lrc": "LRC 歌词格式",
+      "json": "JSON 格式"
+    }
+  },
+  "upload": {
+    "unsupportedFileType": "不支持的文件类型。允许的类型：{extensions}",
+    "fileSizeTooLarge": "文件太大。最大大小为 10MB。",
+    "processingFiles": "处理文件中...",
+    "uploadSubtitleFile": "上传字幕文件",
+    "uploadSubtitleFiles": "上传字幕文件",
+    "dragAndDropSingle": "将字幕文件拖放到此处，或点击浏览",
+    "dragAndDropMultiple": "将字幕文件拖放到此处，或点击浏览",
+    "uploadErrors": "上传错误"
+  },
+  "fileManager": {
+    "translating": "翻译中...",
+    "translated": "已翻译",
+    "ready": "就绪",
+    "uploadedFiles": "已上传文件",
+    "downloadAll": "下载全部",
+    "clearAll": "清空全部",
+    "entries": "条",
+    "progress": "进度：",
+    "failed": "失败"
   },
   "translation": {
-    "settings": "Settings",
-    "aiProvider": "AI Provider",
-    "configureProviders": "Configure Providers",
-    "translationControls": "Translation Controls",
-    "sourceLanguage": "Source Language",
-    "targetLanguage": "Target Language",
-    "startTranslation": "Start Translation",
-    "sourceLanguagePlaceholder": "Enter source language (e.g., English)",
-    "targetLanguagePlaceholder": "Enter target language (e.g., Chinese)",
-    "configurationError": "Please configure AI provider settings before translating"
+    "settings": "设置",
+    "aiProvider": "AI 提供商",
+    "configureProviders": "配置提供商",
+    "translationControls": "翻译控制",
+    "sourceLanguage": "源语言",
+    "targetLanguage": "目标语言",
+    "startTranslation": "开始翻译",
+    "sourceLanguagePlaceholder": "输入源语言（例如：English）",
+    "targetLanguagePlaceholder": "输入目标语言（例如：Chinese）",
+    "configurationError": "请先配置 AI 提供商设置再进行翻译",
+    "translating": "翻译中...",
+    "languagesDifferentError": "源语言和目标语言必须不同",
+    "status": {
+      "pending": "等待中",
+      "translating": "翻译中",
+      "completed": "已完成"
+    }
   },
   "config": {
-    "title": "Translation Configuration",
-    "aiProviders": "AI Providers",
-    "generalSettings": "General Settings",
-    "addProvider": "Add Provider",
-    "configuration": "Configuration",
-    "connected": "Connected",
-    "failed": "Failed",
-    "testConnection": "Test Connection",
-    "apiKey": "API Key",
-    "baseUrl": "Base URL (Optional)",
-    "customEndpoint": "Custom API endpoint",
-    "addCustomProvider": "Add Custom Provider",
-    "providerName": "Provider Name",
-    "modelNames": "Model Names (one per line)",
-    "cancel": "Cancel",
-    "defaultProvider": "Default Provider",
-    "defaultModel": "Default Model",
-    "concurrency": "Concurrency",
-    "concurrencyDescription": "Number of simultaneous translations to process",
-    "subtitlesPerBatch": "Subtitles per Batch",
-    "subtitlesPerBatchDescription": "Number of subtitle entries to translate in each batch. Higher values provide better context but may be slower.",
-    "outputFormat": "Output Format",
-    "originalOnTop": "Original on top",
-    "translationOnTop": "Translation on top",
-    "outputFormatDescription": "Default layout for exported subtitle files"
+    "title": "翻译配置",
+    "aiProviders": "AI 提供商",
+    "generalSettings": "通用设置",
+    "addProvider": "添加提供商",
+    "configuration": "配置",
+    "connected": "已连接",
+    "failed": "失败",
+    "testConnection": "测试连接",
+    "apiKey": "API 密钥",
+    "apiKeyRequired": "API 密钥为必填项",
+    "apiKeyPlaceholder": "输入您的 API 密钥",
+    "baseUrl": "基础 URL（可选）",
+    "customEndpoint": "自定义 API 端点",
+    "addCustomProvider": "添加自定义提供商",
+    "providerName": "提供商名称",
+    "providerNamePlaceholder": "例如：本地 LLM",
+    "modelNames": "模型名称（每行一个）",
+    "modelNamesPlaceholder": "gpt-4\ngpt-3.5-turbo",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "cancel": "取消",
+    "defaultProvider": "默认提供商",
+    "defaultModel": "默认模型",
+    "selectModel": "选择模型",
+    "defaultModelDescription": "所选提供商的默认模型",
+    "concurrency": "并发数",
+    "concurrencyDescription": "同时处理的翻译任务数量",
+    "subtitlesPerBatch": "每批字幕数",
+    "subtitlesPerBatchDescription": "每批翻译的字幕条目数。更高的值提供更好的上下文，但可能更慢。",
+    "outputFormat": "输出格式",
+    "originalOnTop": "原文在上",
+    "translationOnTop": "译文在上",
+    "outputFormatDescription": "导出字幕文件的默认布局",
+    "removeProvider": "移除提供商",
+    "custom": "自定义",
+    "errorPrefix": "错误："
+  },
+  "modelManager": {
+    "availableModels": "可用模型",
+    "noModelsConfigured": "未配置模型",
+    "addModel": "添加模型",
+    "addModelPlaceholder": "输入模型名称（例如：gpt-4、claude-3-sonnet）",
+    "deleteModel": "删除模型",
+    "deleteModelConfirm": "确定要删除模型 \"{model}\" 吗？",
+    "deleteModelNote": "注意：这将设置 \"{newModel}\" 为新的选中模型。",
+    "modelNameEmpty": "模型名称不能为空",
+    "modelAlreadyExists": "模型已存在"
   },
   "footer": {
+    "appTitle": "字幕工具",
+    "appDescription": "AI 驱动的字幕翻译和格式转换",
     "supports": "支持",
     "subtitleFormats": "种字幕格式",
-    "aiProviders": "个 AI 提供商",
-    "clientProcessing": "客户端处理"
+    "clientProcessing": "客户端处理",
+    "madeWith": "使用",
+    "byDevelopers": "制作",
+    "copyright": "© {year} 字幕工具"
+  },
+  "theme": {
+    "toggleTheme": "切换主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "系统"
+  },
+  "language": {
+    "switchLanguage": "切换语言"
+  },
+  "metadata": {
+    "title": "字幕工具",
+    "description": "AI 驱动的字幕翻译和格式转换"
   },
   "common": {
     "error": "错误",

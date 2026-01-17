@@ -1,7 +1,9 @@
 {
   "navigation": {
     "subtitleTranslation": "Subtitle Translation",
-    "formatConversion": "Format Conversion"
+    "formatConversion": "Format Conversion",
+    "appTitle": "Subtitle Tools",
+    "appDescription": "AI-powered subtitle processing"
   },
   "converter": {
     "title": "Subtitle Format Converter",
@@ -22,7 +24,39 @@
     "convertTo": "→ Will convert to",
     "converting": "Converting...",
     "convertDownload": "Convert & Download",
-    "remove": "Remove"
+    "remove": "Remove",
+    "formatDescriptions": {
+      "sub": "MicroDVD SUB Format",
+      "srt": "SubRip Subtitle Format",
+      "sbv": "SubViewer Format",
+      "vtt": "WebVTT Format",
+      "ssa": "SubStation Alpha Format",
+      "ass": "Advanced SubStation Alpha",
+      "smi": "SAMI Format",
+      "lrc": "LRC Lyrics Format",
+      "json": "JSON Format"
+    }
+  },
+  "upload": {
+    "unsupportedFileType": "Unsupported file type. Allowed types: {extensions}",
+    "fileSizeTooLarge": "File size too large. Maximum size is 10MB.",
+    "processingFiles": "Processing files...",
+    "uploadSubtitleFile": "Upload subtitle file",
+    "uploadSubtitleFiles": "Upload subtitle files",
+    "dragAndDropSingle": "Drag and drop your subtitle file here, or click to browse",
+    "dragAndDropMultiple": "Drag and drop your subtitle files here, or click to browse",
+    "uploadErrors": "Upload Errors"
+  },
+  "fileManager": {
+    "translating": "Translating...",
+    "translated": "Translated",
+    "ready": "Ready",
+    "uploadedFiles": "Uploaded Files",
+    "downloadAll": "Download All",
+    "clearAll": "Clear All",
+    "entries": "entries",
+    "progress": "Progress:",
+    "failed": "failed"
   },
   "translation": {
     "settings": "Settings",
@@ -34,7 +68,14 @@
     "startTranslation": "Start Translation",
     "sourceLanguagePlaceholder": "Enter source language (e.g., English)",
     "targetLanguagePlaceholder": "Enter target language (e.g., Chinese)",
-    "configurationError": "Please configure AI provider settings before translating"
+    "configurationError": "Please configure AI provider settings before translating",
+    "translating": "Translating...",
+    "languagesDifferentError": "Source and target languages must be different",
+    "status": {
+      "pending": "pending",
+      "translating": "translating",
+      "completed": "completed"
+    }
   },
   "config": {
     "title": "Translation Configuration",
@@ -46,14 +87,21 @@
     "failed": "Failed",
     "testConnection": "Test Connection",
     "apiKey": "API Key",
+    "apiKeyRequired": "API key is required",
+    "apiKeyPlaceholder": "Enter your API key",
     "baseUrl": "Base URL (Optional)",
     "customEndpoint": "Custom API endpoint",
     "addCustomProvider": "Add Custom Provider",
     "providerName": "Provider Name",
+    "providerNamePlaceholder": "e.g., Local LLM",
     "modelNames": "Model Names (one per line)",
+    "modelNamesPlaceholder": "gpt-4\ngpt-3.5-turbo",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
     "cancel": "Cancel",
     "defaultProvider": "Default Provider",
     "defaultModel": "Default Model",
+    "selectModel": "Select a model",
+    "defaultModelDescription": "Default model for the selected provider",
     "concurrency": "Concurrency",
     "concurrencyDescription": "Number of simultaneous translations to process",
     "subtitlesPerBatch": "Subtitles per Batch",
@@ -61,13 +109,44 @@
     "outputFormat": "Output Format",
     "originalOnTop": "Original on top",
     "translationOnTop": "Translation on top",
-    "outputFormatDescription": "Default layout for exported subtitle files"
+    "outputFormatDescription": "Default layout for exported subtitle files",
+    "removeProvider": "Remove Provider",
+    "custom": "Custom",
+    "errorPrefix": "Error:"
+  },
+  "modelManager": {
+    "availableModels": "Available Models",
+    "noModelsConfigured": "No models configured",
+    "addModel": "Add Model",
+    "addModelPlaceholder": "Enter model name (e.g., gpt-4, claude-3-sonnet)",
+    "deleteModel": "Delete Model",
+    "deleteModelConfirm": "Are you sure you want to delete the model \"{model}\"?",
+    "deleteModelNote": "Note: This will set \"{newModel}\" as the new selected model.",
+    "modelNameEmpty": "Model name cannot be empty",
+    "modelAlreadyExists": "Model already exists"
   },
   "footer": {
+    "appTitle": "Subtitle Tools",
+    "appDescription": "AI-powered subtitle translation and format conversion",
     "supports": "Supports",
     "subtitleFormats": " subtitle formats",
-    "aiProviders": " AI providers",
-    "clientProcessing": "Client-side processing"
+    "clientProcessing": "Client-side processing",
+    "madeWith": "Made with",
+    "byDevelopers": "by developers",
+    "copyright": "© {year} Subtitle Tools"
+  },
+  "theme": {
+    "toggleTheme": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "switchLanguage": "Switch language"
+  },
+  "metadata": {
+    "title": "Subtitle Tools",
+    "description": "AI-powered subtitle translation and format conversion"
   },
   "common": {
     "error": "Error",

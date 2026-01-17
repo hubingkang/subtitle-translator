@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { Languages, FileText } from 'lucide-react'
+import { Languages, FileText, Github } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { cn } from '@/lib/utils'
+import { Button } from '../ui/button'
 
 export function Navigation() {
   const pathname = usePathname()
@@ -27,7 +28,7 @@ export function Navigation() {
   ]
 
   return (
-    <header className="border-b bg-card">
+    <header className="border-b bg-card sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-8">
@@ -37,9 +38,9 @@ export function Navigation() {
                 <Languages className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Subtitle Tools</h1>
+                <h1 className="text-xl font-bold">{t('appTitle')}</h1>
                 <p className="text-xs text-muted-foreground">
-                  AI-powered subtitle processing
+                  {t('appDescription')}
                 </p>
               </div>
             </div>
@@ -49,16 +50,16 @@ export function Navigation() {
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
-                
+
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
                       isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -75,16 +76,16 @@ export function Navigation() {
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
-                
+
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors",
+                      'flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors',
                       isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
                   >
                     <Icon className="h-3 w-3" />
@@ -93,7 +94,12 @@ export function Navigation() {
                 )
               })}
             </nav>
-            
+
+            <Link href="https://github.com/hubingkang/subtitle-translator">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Github className="h-4 w-4" />
+              </Button>
+            </Link>
             <LanguageSwitcher />
             <ThemeToggle />
           </div>

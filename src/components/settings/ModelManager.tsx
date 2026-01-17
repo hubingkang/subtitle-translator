@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Plus, X, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,6 +34,8 @@ export function ModelManager({
   onSelectedModelChange,
   className,
 }: ModelManagerProps) {
+  const t = useTranslations('modelManager')
+  const tCommon = useTranslations('common')
   const [newModelName, setNewModelName] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const [modelToDelete, setModelToDelete] = useState<string | null>(null)
@@ -43,12 +46,12 @@ export function ModelManager({
 
     // Validation
     if (!trimmedName) {
-      setError('Model name cannot be empty')
+      setError(t('modelNameEmpty'))
       return
     }
 
     if (models.includes(trimmedName)) {
-      setError('Model already exists')
+      setError(t('modelAlreadyExists'))
       return
     }
 
@@ -96,13 +99,12 @@ export function ModelManager({
   return (
     <div className={className}>
       <div className="space-y-3">
-        <Label className="text-sm">Available Models</Label>
+        <Label className="text-sm">{t('availableModels')}</Label>
 
         {models.length > 0 ? (
           <RadioGroup
             value={selectedModel || ''}
             onValueChange={handleSelectedModelChange}
-            className="space-y-2"
           >
             {models.map((model) => (
               <div
@@ -121,7 +123,7 @@ export function ModelManager({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive cursor-pointer"
                   onClick={() => setModelToDelete(model)}
                   disabled={models.length === 1} // Don't allow deleting the last model
                 >
@@ -132,7 +134,7 @@ export function ModelManager({
           </RadioGroup>
         ) : (
           <div className="text-sm text-muted-foreground py-2">
-            No models configured
+            {t('noModelsConfigured')}
           </div>
         )}
 
@@ -146,7 +148,7 @@ export function ModelManager({
               className="w-full"
             >
               <Plus className="h-3 w-3 mr-2" />
-              Add Model
+              {t('addModel')}
             </Button>
           ) : (
             <div className="space-y-2">
@@ -157,7 +159,7 @@ export function ModelManager({
                   setError(null) // Clear error when user types
                 }}
                 onKeyDown={handleKeyPress}
-                placeholder="Enter model name (e.g., gpt-4, claude-3-sonnet)"
+                placeholder={t('addModelPlaceholder')}
                 autoFocus
                 className="text-sm"
               />
@@ -179,7 +181,7 @@ export function ModelManager({
                     setError(null)
                   }}
                 >
-                  Cancel
+                  {tCommon('cancel')}
                 </Button>
 
                 <Button
@@ -187,7 +189,7 @@ export function ModelManager({
                   onClick={handleAddModel}
                   disabled={!newModelName.trim()}
                 >
-                  Add
+                  {tCommon('add')}
                 </Button>
               </div>
             </div>
@@ -202,28 +204,25 @@ export function ModelManager({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Model</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteModel')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the model &quot;{modelToDelete}
-              &quot;? This action cannot be undone.
+              {t('deleteModelConfirm', { model: modelToDelete as string })}
               {selectedModel === modelToDelete && models.length > 1 && (
-                <div className="mt-2 text-sm">
-                  <Badge variant="outline" className="text-xs">
-                    Note: This will set &quot;
-                    {models.find((m) => m !== modelToDelete)}&quot; as the new
-                    selected model.
-                  </Badge>
-                </div>
+                <Badge variant="outline" className="text-xs mt-2">
+                  {t('deleteModelNote', {
+                    newModel: models.find((m) => m !== modelToDelete) as string,
+                  })}
+                </Badge>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => modelToDelete && handleDeleteModel(modelToDelete)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {tCommon('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

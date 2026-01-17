@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Upload, FileText, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +17,7 @@ export function FileUpload({
   loading = false,
   multiple = true,
 }: FileUploadProps) {
+  const t = useTranslations('upload')
   const [dragActive, setDragActive] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
 
@@ -24,13 +26,13 @@ export function FileUpload({
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
 
     if (!allowedExtensions.includes(fileExtension)) {
-      return `Unsupported file type. Allowed types: ${allowedExtensions.join(
-        ', '
-      )}`
+      return t('unsupportedFileType', {
+        extensions: allowedExtensions.join(', '),
+      })
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      return 'File size too large. Maximum size is 10MB.'
+      return t('fileSizeTooLarge')
     }
 
     return null
@@ -134,13 +136,13 @@ export function FileUpload({
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">
                 {loading
-                  ? 'Processing files...'
-                  : `Upload subtitle file${multiple ? 's' : ''}`}
+                  ? t('processingFiles')
+                  : multiple
+                  ? t('uploadSubtitleFiles')
+                  : t('uploadSubtitleFile')}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {multiple
-                  ? 'Drag and drop your subtitle files here, or click to browse'
-                  : 'Drag and drop your subtitle file here, or click to browse'}
+                {multiple ? t('dragAndDropMultiple') : t('dragAndDropSingle')}
               </p>
             </div>
 
@@ -173,7 +175,7 @@ export function FileUpload({
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-destructive mb-2">
               <AlertCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">Upload Errors</span>
+              <span className="text-sm font-medium">{t('uploadErrors')}</span>
             </div>
             <div className="space-y-1">
               {errors.map((error, index) => (

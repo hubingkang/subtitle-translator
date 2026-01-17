@@ -356,7 +356,7 @@ export default function Home() {
         )
 
         // Small delay between downloads to ensure proper browser handling
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
       }
 
       // Download all completed JSON files sequentially
@@ -449,7 +449,9 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">{t('aiProvider')}</Label>
+                  <Label className="text-sm font-medium">
+                    {t('aiProvider')}
+                  </Label>
                   <Select
                     value={config.defaultProvider}
                     onValueChange={(value) =>

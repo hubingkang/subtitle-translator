@@ -1,13 +1,13 @@
 'use client'
 
-import { X, FileText, CheckCircle, AlertCircle, Clock, Download } from 'lucide-react'
+import { X, FileText, CheckCircle, AlertCircle, Clock, Download, FileJson } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { SubtitleFile } from '@/types/translation'
+import { UploadedFile, isJsonFile } from '@/types/translation'
 
 interface FileManagerProps {
-  files: SubtitleFile[]
+  files: UploadedFile[]
   onRemoveFile: (fileId: string) => void
   onClearAll: () => void
   onDownload: (fileId: string) => void
@@ -25,17 +25,21 @@ export function FileManager({
     return null
   }
 
-  const getFileStatusIcon = (file: SubtitleFile) => {
+  const getFileStatusIcon = (file: UploadedFile) => {
     if (file.isTranslating) {
       return <Clock className="h-4 w-4 text-blue-500 animate-pulse" />
     }
     if (file.translatedEntries && file.translatedEntries.length > 0) {
       return <CheckCircle className="h-4 w-4 text-green-500" />
     }
+    // Show different icon for JSON files
+    if (isJsonFile(file)) {
+      return <FileJson className="h-4 w-4 text-muted-foreground" />
+    }
     return <FileText className="h-4 w-4 text-muted-foreground" />
   }
 
-  const getFileStatusText = (file: SubtitleFile) => {
+  const getFileStatusText = (file: UploadedFile) => {
     if (file.isTranslating) {
       return 'Translating...'
     }
@@ -45,9 +49,16 @@ export function FileManager({
     return 'Ready'
   }
 
-  const getProgressPercentage = (file: SubtitleFile) => {
+  const getProgressPercentage = (file: UploadedFile) => {
     if (!file.progress || file.progress.total === 0) return 0
     return Math.round((file.progress.completed / file.progress.total) * 100)
+  }
+
+  const getEntriesCount = (file: UploadedFile) => {
+    if (isJsonFile(file)) {
+      return file.entries.length
+    }
+    return file.entries.length
   }
 
   // Check if there are any completed files to download
@@ -108,7 +119,7 @@ export function FileManager({
                   </h4>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge variant="secondary" className="text-xs">
-                      {file.entries.length} entries
+                      {getEntriesCount(file)} {isJsonFile(file) ? 'items' : 'entries'}
                     </Badge>
                     <Badge
                       variant="outline"

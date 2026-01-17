@@ -6,10 +6,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SubtitleFile } from '@/types/translation'
+import { UploadedFile } from '@/types/translation'
 
 interface LanguageControlBarProps {
-  files: SubtitleFile[]
+  files: UploadedFile[]
   sourceLanguage: string
   targetLanguage: string
   onSourceLanguageChange: (language: string) => void

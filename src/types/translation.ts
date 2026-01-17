@@ -77,3 +77,31 @@ export interface ExportOptions {
   layout: 'original-top' | 'translation-top';
   includeTimestamps: boolean;
 }
+
+// JSON file translation types
+export interface JsonTextEntry {
+  text: string;
+  translation?: string;
+  [key: string]: unknown; // Allow other fields to be preserved
+}
+
+export interface JsonFile {
+  id: string;
+  name: string;
+  entries: JsonTextEntry[];
+  textEntries: string[];
+  sourceLanguage?: string;
+  targetLanguage?: string;
+  translatedEntries?: JsonTextEntry[];
+  progress?: TranslationProgress;
+  isTranslating?: boolean;
+  isJsonFile: true;
+}
+
+// Union type for all uploadable files
+export type UploadedFile = SubtitleFile | JsonFile;
+
+// Type guard to check if a file is a JSON file
+export function isJsonFile(file: UploadedFile): file is JsonFile {
+  return 'isJsonFile' in file && file.isJsonFile === true;
+}

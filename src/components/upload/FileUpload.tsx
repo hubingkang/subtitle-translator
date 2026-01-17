@@ -20,7 +20,7 @@ export function FileUpload({
   const [errors, setErrors] = useState<string[]>([])
 
   const validateFile = (file: File): string | null => {
-    const allowedExtensions = ['.srt', '.vtt', '.ass', '.ssa']
+    const allowedExtensions = ['.srt', '.vtt', '.ass', '.ssa', '.json']
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -113,7 +113,7 @@ export function FileUpload({
         <CardContent>
           <input
             type="file"
-            accept=".srt,.vtt,.ass,.ssa"
+            accept=".srt,.vtt,.ass,.ssa,.json"
             multiple={multiple}
             onChange={handleFileInput}
             disabled={loading}
@@ -151,7 +151,7 @@ export function FileUpload({
               </div>
 
               <div className="flex gap-1">
-                {['.srt', '.vtt', '.ass', '.ssa'].map((ext) => (
+                {['.srt', '.vtt', '.ass', '.ssa', '.json'].map((ext) => (
                   <Badge key={ext} variant="secondary" className="text-xs">
                     {ext}
                   </Badge>

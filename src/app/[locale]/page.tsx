@@ -17,7 +17,7 @@ import { FileUpload } from '@/components/upload/FileUpload'
 import { FileManager } from '@/components/upload/FileManager'
 import { LanguageControlBar } from '@/components/language/LanguageControlBar'
 import { ConfigPanel } from '@/components/settings/ConfigPanel'
-import { SubtitleFile, OutputFormat } from '@/types/translation'
+import { SubtitleFile, OutputFormat, JsonFile, UploadedFile, isJsonFile } from '@/types/translation'
 import { SubtitleParserClient } from '@/lib/client/subtitle-parser-client'
 import { TranslatorClient } from '@/lib/client/translator-client'
 
@@ -27,35 +27,58 @@ export default function Home() {
   const t = useTranslations('translation')
   const tCommon = useTranslations('common')
   const [subtitleFiles, setSubtitleFiles] = useState<SubtitleFile[]>([])
+  const [jsonFiles, setJsonFiles] = useState<JsonFile[]>([])
   const [sourceLanguage, setSourceLanguage] = useState('')
   const [targetLanguage, setTargetLanguage] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Combined files for display
+  const allFiles: UploadedFile[] = [...subtitleFiles, ...jsonFiles]
+
   const handleFilesSelect = async (files: File[]) => {
     setIsUploading(true)
     setError(null)
 
-    const newFiles: SubtitleFile[] = []
+    const newSubtitleFiles: SubtitleFile[] = []
+    const newJsonFiles: JsonFile[] = []
 
     for (const file of files) {
       try {
-        // Process file using client-side parser
-        const result = await SubtitleParserClient.processFile(file)
+        // Check if it's a JSON file
+        if (SubtitleParserClient.isJsonFileByExtension(file.name)) {
+          // Process JSON file
+          const result = await SubtitleParserClient.processJsonFile(file)
 
-        console.log('result', result)
+          console.log('JSON result', result)
 
-        const subtitleFile: SubtitleFile = {
-          id: crypto.randomUUID(),
-          name: result.subtitle.name,
-          content: result.subtitle.content || '',
-          format: result.subtitle.format || 'srt',
-          entries: result.subtitle.entries,
-          textEntries: result.textEntries,
+          const jsonFile: JsonFile = {
+            id: crypto.randomUUID(),
+            name: result.jsonFile.name,
+            entries: result.jsonFile.entries,
+            textEntries: result.textEntries,
+            isJsonFile: true,
+          }
+
+          newJsonFiles.push(jsonFile)
+        } else {
+          // Process subtitle file using client-side parser
+          const result = await SubtitleParserClient.processFile(file)
+
+          console.log('Subtitle result', result)
+
+          const subtitleFile: SubtitleFile = {
+            id: crypto.randomUUID(),
+            name: result.subtitle.name,
+            content: result.subtitle.content || '',
+            format: result.subtitle.format || 'srt',
+            entries: result.subtitle.entries,
+            textEntries: result.textEntries,
+          }
+
+          newSubtitleFiles.push(subtitleFile)
         }
-
-        newFiles.push(subtitleFile)
       } catch (err) {
         setError(
           err instanceof Error ? err.message : `Failed to process ${file.name}`
@@ -63,8 +86,12 @@ export default function Home() {
       }
     }
 
-    if (newFiles.length > 0) {
-      setSubtitleFiles((prev) => [...prev, ...newFiles])
+    if (newSubtitleFiles.length > 0) {
+      setSubtitleFiles((prev) => [...prev, ...newSubtitleFiles])
+    }
+
+    if (newJsonFiles.length > 0) {
+      setJsonFiles((prev) => [...prev, ...newJsonFiles])
     }
 
     setIsUploading(false)
@@ -83,8 +110,8 @@ export default function Home() {
 
     setError(null)
 
-    // Update files to set source/target languages and mark as translating
-    const updatedFiles = subtitleFiles.map((file) => ({
+    // Update subtitle files to set source/target languages and mark as translating
+    const updatedSubtitleFiles = subtitleFiles.map((file) => ({
       ...file,
       sourceLanguage,
       targetLanguage,
@@ -94,15 +121,26 @@ export default function Home() {
         : file.progress,
     }))
 
-    setSubtitleFiles(updatedFiles)
+    // Update JSON files to set source/target languages and mark as translating
+    const updatedJsonFiles = jsonFiles.map((file) => ({
+      ...file,
+      sourceLanguage,
+      targetLanguage,
+      isTranslating: !file.translatedEntries?.length,
+      progress: !file.translatedEntries?.length
+        ? { total: file.textEntries.length, completed: 0, failed: 0 }
+        : file.progress,
+    }))
 
-    // console.log('updatedFiles', updatedFiles)
-    // return
-    // Translate files that haven't been translated yet
-    const filesToTranslate = updatedFiles.filter((file) => file.isTranslating)
+    setSubtitleFiles(updatedSubtitleFiles)
+    setJsonFiles(updatedJsonFiles)
 
-    // Process all files concurrently
-    const translationPromises = filesToTranslate.map(async (file) => {
+    // Translate subtitle files that haven't been translated yet
+    const subtitleFilesToTranslate = updatedSubtitleFiles.filter((file) => file.isTranslating)
+    const jsonFilesToTranslate = updatedJsonFiles.filter((file) => file.isTranslating)
+
+    // Process all subtitle files concurrently
+    const subtitleTranslationPromises = subtitleFilesToTranslate.map(async (file) => {
       try {
         const translator = new TranslatorClient()
 
@@ -169,49 +207,142 @@ export default function Home() {
       }
     })
 
+    // Process all JSON files concurrently
+    const jsonTranslationPromises = jsonFilesToTranslate.map(async (file) => {
+      try {
+        const translator = new TranslatorClient()
+
+        // Use optimized batch translation that only translates text content
+        const translationResults = await translator.translateBatch(
+          file.textEntries, // Only translate the extracted text content
+          sourceLanguage,
+          targetLanguage,
+          config.defaultProvider,
+          config.providers[config.defaultProvider]?.selectedModel ||
+            config.defaultModel,
+          (progress) => {
+            // Update progress in real-time
+            setJsonFiles((prev) =>
+              prev.map((f) => (f.id === file.id ? { ...f, progress } : f))
+            )
+          }
+        )
+
+        // Map translation results back to JSON entries
+        const translatedEntries = file.entries.map((entry, index) => ({
+          ...entry,
+          translation: translationResults[index]?.translatedText || entry.text,
+        }))
+
+        setJsonFiles((prev) =>
+          prev.map((f) =>
+            f.id === file.id
+              ? {
+                  ...f,
+                  translatedEntries,
+                  isTranslating: false,
+                  progress: {
+                    total: file.textEntries.length,
+                    completed: file.textEntries.length,
+                    failed: 0,
+                  },
+                }
+              : f
+          )
+        )
+      } catch (err) {
+        setJsonFiles((prev) =>
+          prev.map((f) =>
+            f.id === file.id
+              ? {
+                  ...f,
+                  isTranslating: false,
+                  progress: {
+                    total: file.textEntries.length,
+                    completed: 0,
+                    failed: file.textEntries.length,
+                  },
+                }
+              : f
+          )
+        )
+        setError(
+          err instanceof Error
+            ? `${file.name}: ${err.message}`
+            : `Translation failed for ${file.name}`
+        )
+      }
+    })
+
     // Wait for all translations to complete
-    await Promise.allSettled(translationPromises)
+    await Promise.allSettled([...subtitleTranslationPromises, ...jsonTranslationPromises])
   }
 
   const handleDownload = async (fileId: string) => {
-    const file = subtitleFiles.find((f) => f.id === fileId)
-    if (!file?.translatedEntries?.length) return
+    // Check if it's a subtitle file
+    const subtitleFile = subtitleFiles.find((f) => f.id === fileId)
+    if (subtitleFile?.translatedEntries?.length) {
+      setError(null)
+      try {
+        // Generate filename with original format
+        const baseName = subtitleFile.name.replace(/\.[^/.]+$/, '')
+        const filename = `${baseName}`
 
-    setError(null)
+        // Use client-side download method with original format and default layout
+        SubtitleParserClient.downloadFile(
+          subtitleFile.translatedEntries,
+          subtitleFile.format as OutputFormat,
+          'original-top',
+          filename
+        )
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Download failed')
+      }
+      return
+    }
 
-    try {
-      // Generate filename with original format
-      const baseName = file.name.replace(/\.[^/.]+$/, '')
-      const filename = `${baseName}`
+    // Check if it's a JSON file
+    const jsonFile = jsonFiles.find((f) => f.id === fileId)
+    if (jsonFile?.translatedEntries?.length) {
+      setError(null)
+      try {
+        // Generate filename
+        const baseName = jsonFile.name.replace(/\.[^/.]+$/, '')
 
-      // Use client-side download method with original format and default layout
-      SubtitleParserClient.downloadFile(
-        file.translatedEntries,
-        file.format as OutputFormat,
-        'original-top',
-        filename
-      )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Download failed')
+        // Use client-side download method for JSON
+        SubtitleParserClient.downloadJsonFile(
+          jsonFile.translatedEntries,
+          baseName
+        )
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Download failed')
+      }
+      return
     }
   }
 
   const handleRemoveFile = (fileId: string) => {
+    // Try to remove from subtitle files
     setSubtitleFiles((prev) => prev.filter((file) => file.id !== fileId))
+    // Try to remove from JSON files
+    setJsonFiles((prev) => prev.filter((file) => file.id !== fileId))
   }
 
   const handleDownloadAll = async () => {
-    const completedFiles = subtitleFiles.filter(file => 
+    const completedSubtitleFiles = subtitleFiles.filter(file => 
+      file.translatedEntries && file.translatedEntries.length > 0
+    )
+    const completedJsonFiles = jsonFiles.filter(file => 
       file.translatedEntries && file.translatedEntries.length > 0
     )
 
-    if (completedFiles.length === 0) return
+    if (completedSubtitleFiles.length === 0 && completedJsonFiles.length === 0) return
 
     setError(null)
 
     try {
-      // Download all completed files sequentially to avoid overwhelming the browser
-      for (const file of completedFiles) {
+      // Download all completed subtitle files sequentially
+      for (const file of completedSubtitleFiles) {
         // Generate filename with original format
         const baseName = file.name.replace(/\.[^/.]+$/, '')
         const filename = `${baseName}`
@@ -227,6 +358,21 @@ export default function Home() {
         // Small delay between downloads to ensure proper browser handling
         await new Promise(resolve => setTimeout(resolve, 100))
       }
+
+      // Download all completed JSON files sequentially
+      for (const file of completedJsonFiles) {
+        // Generate filename
+        const baseName = file.name.replace(/\.[^/.]+$/, '')
+
+        // Use client-side download method for JSON
+        SubtitleParserClient.downloadJsonFile(
+          file.translatedEntries!,
+          baseName
+        )
+
+        // Small delay between downloads to ensure proper browser handling
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Batch download failed')
     }
@@ -234,12 +380,13 @@ export default function Home() {
 
   const handleClearAllFiles = () => {
     setSubtitleFiles([])
+    setJsonFiles([])
   }
 
   const config = configManager.getConfig()
   const validation = configManager.validateConfig()
   const hasValidConfig = validation.isValid
-  const isAnyTranslating = subtitleFiles.some((file) => file.isTranslating)
+  const isAnyTranslating = subtitleFiles.some((file) => file.isTranslating) || jsonFiles.some((file) => file.isTranslating)
 
   return (
     <div className="min-h-screen bg-background">
@@ -283,7 +430,7 @@ export default function Home() {
 
             {/* File Manager */}
             <FileManager
-              files={subtitleFiles}
+              files={allFiles}
               onRemoveFile={handleRemoveFile}
               onClearAll={handleClearAllFiles}
               onDownload={handleDownload}
@@ -358,7 +505,7 @@ export default function Home() {
             </Card> */}
 
             <LanguageControlBar
-              files={subtitleFiles}
+              files={allFiles}
               sourceLanguage={sourceLanguage}
               targetLanguage={targetLanguage}
               onSourceLanguageChange={setSourceLanguage}
